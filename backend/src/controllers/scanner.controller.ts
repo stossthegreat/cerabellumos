@@ -2,17 +2,58 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/db";
 import { aiService } from "../services/ai.service";
+import { ocrService } from "../services/ocr.service";
 
 export async function scannerController(fastify: FastifyInstance) {
+  /**
+   * POST /scan/ocr - Extract text from image
+   */
+  fastify.post("/scan/ocr", async (req: any) => {
+    const userId = req.userId;
+    const { imageBase64 } = req.body;
+
+    if (!imageBase64) {
+      return { error: "imageBase64 required" };
+    }
+
+    try {
+      const result = await ocrService.extractText(imageBase64);
+      const analysis = await ocrService.analyzeImageContent(imageBase64);
+
+      return {
+        ok: true,
+        text: result.text,
+        confidence: result.confidence,
+        method: result.method,
+        contentType: analysis.type,
+        detectedElements: analysis.detectedElements,
+      };
+    } catch (err: any) {
+      return { error: err.message };
+    }
+  });
+
   /**
    * POST /scan/solve - Solve scanned problem
    */
   fastify.post("/scan/solve", async (req: any) => {
     const userId = req.userId;
-    const { ocrText, subject, imageUrl } = req.body;
+    const { ocrText, subject, imageUrl, imageBase64 } = req.body;
 
-    if (!ocrText) {
-      return { error: "ocrText required" };
+    let text = ocrText;
+
+    // If imageBase64 provided, perform OCR first
+    if (!text && imageBase64) {
+      try {
+        const ocrResult = await ocrService.extractText(imageBase64);
+        text = ocrResult.text;
+      } catch (err) {
+        return { error: "OCR failed. Please provide text manually." };
+      }
+    }
+
+    if (!text) {
+      return { error: "ocrText or imageBase64 required" };
     }
 
     // AI solves the problem

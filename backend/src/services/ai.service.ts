@@ -13,6 +13,7 @@ import { redis } from "../utils/redis";
 import { MENTOR } from "../config/mentors.config";
 import { buildUserIntelState } from "./intel/buildUserIntelState";
 import { UserIntelState } from "./intel/types";
+import { getProviderForTask } from "../config/ai-providers.config";
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o";
 const LLM_MAX_TOKENS = Number(process.env.LLM_MAX_TOKENS || 2000); // Much higher for GPT-4o complete responses
@@ -1673,6 +1674,266 @@ Respond to their question with clarity and precision. If they're asking about a 
     } catch (err) {
       console.warn("⚠️ Failed to update mastery from solve:", err);
     }
+  }
+
+  // ============================================================
+  // 🎯 QUIZ GENERATION (Together AI - DeepSeek V3)
+  // ============================================================
+
+  /**
+   * Generate quiz from topic
+   */
+  async generateQuiz(
+    userId: string,
+    params: {
+      topic: string;
+      subject: string;
+      count?: number;
+      difficulty?: string;
+    }
+  ): Promise<{
+    questions: Array<{
+      question: string;
+      options: string[];
+      correct: number;
+      explanation: string;
+    }>;
+  }> {
+    const provider = getProviderForTask("quiz_generation");
+    const openai = new OpenAI({
+      apiKey: provider.apiKey,
+      baseURL: provider.baseURL,
+    });
+
+    const prompt = `Generate ${params.count || 5} multiple-choice quiz questions about:
+
+Topic: ${params.topic}
+Subject: ${params.subject}
+Difficulty: ${params.difficulty || "medium"}
+
+For each question:
+1. Write a clear, specific question
+2. Provide 4 options (A, B, C, D)
+3. Mark the correct answer
+4. Provide a brief explanation
+
+Output as JSON array:
+[
+  {
+    "question": "...",
+    "options": ["A", "B", "C", "D"],
+    "correct": 0,
+    "explanation": "..."
+  }
+]
+
+Make questions challenging and educational. Focus on understanding, not just memorization.`;
+
+    const completion = await openai.chat.completions.create({
+      model: provider.model!,
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert quiz generator for students. Create challenging, educational questions.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 2000,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "[]";
+    const questions = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0] || "[]");
+
+    return { questions };
+  }
+
+  /**
+   * Generate quiz from video summary
+   */
+  async generateQuizFromVideo(
+    userId: string,
+    params: {
+      videoId: string;
+      title: string;
+      summary: string;
+      keyPoints: string[];
+      conceptIds?: string[];
+      count?: number;
+    }
+  ): Promise<{
+    questions: Array<{
+      question: string;
+      options: string[];
+      correct: number;
+      explanation: string;
+    }>;
+  }> {
+    const provider = getProviderForTask("video_to_cards");
+    const openai = new OpenAI({
+      apiKey: provider.apiKey,
+      baseURL: provider.baseURL,
+    });
+
+    const prompt = `Generate ${params.count || 5} quiz questions based on this video:
+
+Title: ${params.title}
+Summary: ${params.summary}
+
+Key Points:
+${params.keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}
+
+Create questions that test understanding of the main concepts.
+
+Output as JSON array:
+[
+  {
+    "question": "...",
+    "options": ["A", "B", "C", "D"],
+    "correct": 0,
+    "explanation": "..."
+  }
+]`;
+
+    const completion = await openai.chat.completions.create({
+      model: provider.model!,
+      messages: [
+        { role: "system", content: "You are an expert quiz generator." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 2000,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "[]";
+    const questions = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0] || "[]");
+
+    return { questions };
+  }
+
+  /**
+   * Generate quiz from scanned problem
+   */
+  async generateQuizFromScan(
+    userId: string,
+    params: {
+      scanId: string;
+      topic: string;
+      subject: string;
+      solution: string;
+      explanation: string;
+      count?: number;
+    }
+  ): Promise<{
+    questions: Array<{
+      question: string;
+      options: string[];
+      correct: number;
+      explanation: string;
+    }>;
+  }> {
+    const provider = getProviderForTask("quiz_generation");
+    const openai = new OpenAI({
+      apiKey: provider.apiKey,
+      baseURL: provider.baseURL,
+    });
+
+    const prompt = `Generate ${params.count || 3} similar practice questions based on this solved problem:
+
+Topic: ${params.topic}
+Subject: ${params.subject}
+Solution: ${params.solution}
+Explanation: ${params.explanation}
+
+Create variations that test the same concept but with different numbers/scenarios.
+
+Output as JSON array:
+[
+  {
+    "question": "...",
+    "options": ["A", "B", "C", "D"],
+    "correct": 0,
+    "explanation": "..."
+  }
+]`;
+
+    const completion = await openai.chat.completions.create({
+      model: provider.model!,
+      messages: [
+        { role: "system", content: "You are an expert quiz generator." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 1500,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "[]";
+    const questions = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0] || "[]");
+
+    return { questions };
+  }
+
+  // ============================================================
+  // 📚 FLASHCARD GENERATION (Together AI - DeepSeek V3)
+  // ============================================================
+
+  /**
+   * Generate flashcards from topic
+   */
+  async generateFlashcards(
+    userId: string,
+    params: {
+      topic: string;
+      subject: string;
+      count?: number;
+      difficulty?: string;
+    }
+  ): Promise<{
+    cards: Array<{
+      front: string;
+      back: string;
+      topic: string;
+      difficulty: string;
+    }>;
+  }> {
+    const provider = getProviderForTask("quiz_generation");
+    const openai = new OpenAI({
+      apiKey: provider.apiKey,
+      baseURL: provider.baseURL,
+    });
+
+    const prompt = `Generate ${params.count || 10} flashcards for:
+
+Topic: ${params.topic}
+Subject: ${params.subject}
+Difficulty: ${params.difficulty || "medium"}
+
+Each card should:
+- Front: Clear question or concept
+- Back: Concise answer or explanation
+
+Output as JSON array:
+[
+  {
+    "front": "What is...?",
+    "back": "...",
+    "topic": "${params.topic}",
+    "difficulty": "${params.difficulty || "medium"}"
+  }
+]
+
+Focus on key concepts, definitions, and understanding.`;
+
+    const completion = await openai.chat.completions.create({
+      model: provider.model!,
+      messages: [
+        { role: "system", content: "You are an expert flashcard creator." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 2000,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "[]";
+    const cards = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0] || "[]");
+
+    return { cards };
   }
 }
 

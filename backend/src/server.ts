@@ -25,6 +25,10 @@ import { scannerController } from "./controllers/scanner.controller";
 import { videoController } from "./controllers/video.controller";
 import { projectsController } from "./controllers/projects.controller";
 import { studyTargetsController } from "./controllers/study-targets.controller";
+import { statsController } from "./controllers/stats.controller";
+import { identityController } from "./controllers/identity.controller";
+import { quizController } from "./controllers/quiz.controller";
+import { flashcardsController } from "./controllers/flashcards.controller";
 
 // Legacy controllers (keeping for now, can remove later)
 // import { whatIfController } from "./controllers/whatif.controller";
@@ -153,6 +157,10 @@ const buildServer = () => {
     protectedRoutes.register(videoController);          // Video summaries
     protectedRoutes.register(projectsController);       // Neural tab chat projects
     protectedRoutes.register(studyTargetsController);   // Study targets from Flutter
+    protectedRoutes.register(statsController);          // User stats & analytics
+    protectedRoutes.register(identityController);       // Identity Engine
+    protectedRoutes.register(quizController);           // Quiz generation
+    protectedRoutes.register(flashcardsController);     // Flashcard generation & spaced repetition
   });
   
   // Test routes (optional - can be public or protected based on needs)
