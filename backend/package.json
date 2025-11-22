@@ -10,8 +10,7 @@
     "start": "npm run migrate && node dist/server.js",
     "worker:scheduler": "node dist/workers/scheduler.worker.js",
     "worker:notifications": "node dist/workers/notifications.worker.js",
-    "start:all": "npm run migrate && concurrently \"node dist/server.js\" \"node dist/workers/scheduler.worker.js\"",
-    "postinstall": "npm run build"
+    "start:all": "npm run migrate && concurrently \"node dist/server.js\" \"node dist/workers/scheduler.worker.js\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.899.0",
