@@ -3,8 +3,14 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // CHANGE THIS to your backend URL
-  static const String baseUrl = 'http://localhost:8080'; // or your Railway URL
+  // ⚠️ IMPORTANT: Change this based on where you're running:
+  // 
+  // Android Emulator: http://10.0.2.2:8080
+  // iOS Simulator: http://localhost:8080
+  // Real Device (same WiFi): http://YOUR_COMPUTER_IP:8080 (e.g., http://192.168.1.100:8080)
+  // Railway/Production: https://your-app.railway.app
+  
+  static const String baseUrl = 'http://10.0.2.2:8080'; // Default for Android emulator
   
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
