@@ -4,6 +4,10 @@ import '../widgets/animated_blob.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/gradient_button.dart';
 import '../screens/settings_screen.dart';
+import '../screens/ai_scanner_screen.dart';
+import '../screens/flashcard_turbo_screen.dart';
+import '../screens/video_mastery_screen.dart';
+import '../screens/deep_dive_screen.dart';
 
 class StudyTab extends StatelessWidget {
   const StudyTab({super.key});
@@ -99,24 +103,28 @@ class StudyTab extends StatelessWidget {
         'desc': 'INSTANT ANSWERS',
         'icon': LucideIcons.scanLine,
         'colors': [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)],
+        'screen': const AIScannerScreen(),
       },
       {
         'name': 'FLASHCARD TURBO',
         'desc': 'RAPID MEMORIZE',
         'icon': LucideIcons.layers,
         'colors': [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+        'screen': const FlashcardTurboScreen(),
       },
       {
         'name': 'VIDEO MASTERY',
         'desc': 'WATCH & ABSORB',
         'icon': LucideIcons.video,
         'colors': [const Color(0xFFEC4899), const Color(0xFFBE185D)],
+        'screen': const VideoMasteryScreen(),
       },
       {
         'name': 'DEEP DIVE',
         'desc': 'CONCEPT UNLOCK',
         'icon': LucideIcons.lightbulb,
         'colors': [const Color(0xFF06B6D4), const Color(0xFF0284C7)],
+        'screen': const DeepDiveScreen(),
       },
     ];
 
@@ -137,6 +145,13 @@ class StudyTab extends StatelessWidget {
           description: tool['desc'] as String,
           icon: tool['icon'] as IconData,
           gradientColors: tool['colors'] as List<Color>,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => tool['screen'] as Widget,
+              ),
+            );
+          },
         );
       },
     );
@@ -184,7 +199,11 @@ class StudyTab extends StatelessWidget {
           GradientButton(
             text: '📷 ACTIVATE CAMERA',
             onPressed: () {
-              // TODO: Implement camera functionality
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AIScannerScreen(),
+                ),
+              );
             },
             gradientColors: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
             width: double.infinity,
@@ -203,12 +222,14 @@ class _PowerToolCard extends StatefulWidget {
   final String description;
   final IconData icon;
   final List<Color> gradientColors;
+  final VoidCallback onTap;
 
   const _PowerToolCard({
     required this.name,
     required this.description,
     required this.icon,
     required this.gradientColors,
+    required this.onTap,
   });
 
   @override
@@ -221,6 +242,7 @@ class _PowerToolCardState extends State<_PowerToolCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: (_) => setState(() => _isHovered = true),
       onTapUp: (_) => setState(() => _isHovered = false),
       onTapCancel: () => setState(() => _isHovered = false),
