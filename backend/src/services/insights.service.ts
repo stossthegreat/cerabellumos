@@ -32,8 +32,7 @@ export class InsightsService {
     const cached = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    const [habits, recentEvents, context] = await Promise.all([
-      prisma.habit.findMany({ where: { userId } }),
+    const [recentEvents, context] = await Promise.all([
       prisma.event.findMany({
         where: { userId, ts: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
         orderBy: { ts: "desc" },
@@ -41,6 +40,7 @@ export class InsightsService {
       }),
       memoryService.getUserContext(userId),
     ]);
+    const habits: any[] = []; // REMOVED: habit system - now using study sessions
 
     const insights: Insight[] = [];
 

@@ -8,7 +8,9 @@ import { aiService } from "../services/ai.service";
 import { coachMessageService } from "../services/coach-message.service";
 import { notificationsService } from "../services/notifications.service";
 import { voiceService } from "../services/voice.service";
-import { nudgesService } from "../services/nudges.service";
+// Removed nudgesService - using AI-generated study nudges instead
+import { studyIntelligence } from "../services/study-intelligence.service";
+import { aiStudyPrompts } from "../services/ai-study-prompts.service";
 
 const QUEUE = "scheduler";
 export const schedulerQueue = new Queue(QUEUE, { connection: redis });
@@ -29,42 +31,79 @@ function repeatHourly(): JobsOptions {
 
 // 🔌 Called from app bootstrap
 export async function bootstrapSchedulers() {
-  console.log("⏰ Schedulers active (OS brain only)");
+  console.log("⏰ Cerebellum OS Schedulers Active");
 
-  // Re-upsert daily brief / debrief / nudge schedules per user (respect tz)
-  // Run every 6 hours instead of hourly to prevent duplicate job creation
-  await schedulerQueue.add("ensure-daily-briefs", {}, {
-    repeat: { every: 6 * 60 * 60_000 },
-    removeOnComplete: true,
-    removeOnFail: true,
-  });
-  await schedulerQueue.add("ensure-evening-debriefs", {}, {
-    repeat: { every: 6 * 60 * 60_000 },
-    removeOnComplete: true,
-    removeOnFail: true,
-  });
-  await schedulerQueue.add("ensure-nudges", {}, {
+  // Daily Intel (7am) - REPLACES daily-briefs
+  await schedulerQueue.add("ensure-daily-intel", {}, {
     repeat: { every: 6 * 60 * 60_000 },
     removeOnComplete: true,
     removeOnFail: true,
   });
 
-  // REMOVED: auto-nudges-hourly - this was causing duplicate nudges
-  // We already have scheduled nudges at 10am, 2pm, and 6pm via ensure-nudges
+  // Study Nudges (10am, 2pm, 6pm)
+  await schedulerQueue.add("ensure-study-nudges", {}, {
+    repeat: { every: 6 * 60 * 60_000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
 
-  // Weekly memory consolidation (Sundays at midnight)
+  // Exam threshold alerts (check hourly)
+  await schedulerQueue.add("exam-thresholds", {}, {
+    repeat: { every: 60 * 60_000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
+  // Weak topic push (every 48 hours)
+  await schedulerQueue.add("weak-topic-push", {}, {
+    repeat: { every: 48 * 60 * 60_000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
+  // Weekly consolidation (Sundays at midnight)
   await schedulerQueue.add("weekly-consolidation", {}, {
     repeat: { pattern: "0 0 * * 0" }, // Sunday 00:00
     removeOnComplete: true,
     removeOnFail: true,
   });
+
+  console.log("✅ Study OS schedulers bootstrapped");
 }
 
 // ─────────────────────────────────────────────
 // JOB DEFINITIONS
 // ─────────────────────────────────────────────
 
+// ============================================================
+// STUDY OS JOB DEFINITIONS
+// ============================================================
+
+async function ensureDailyIntelJobs() {
+  const users = await prisma.user.findMany({
+    where: { intelEnabled: true },
+    select: { id: true, tz: true },
+  });
+  
+  for (const u of users) {
+    const tz = u.tz || "Europe/London";
+    await schedulerQueue.add(
+      "daily-intel",
+      { userId: u.id },
+      {
+        repeat: { pattern: "0 7 * * *", tz }, // 7am daily
+        jobId: `daily-intel:${u.id}`,
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+  }
+  console.log(`✅ Ensured daily Intel for ${users.length} users`);
+  return { ok: true, users: users.length };
+}
+
 async function ensureDailyBriefJobs() {
+  // Keep for backward compatibility or remove later
   const users = await prisma.user.findMany({ select: { id: true, tz: true } });
   for (const u of users) {
     const tz = u.tz || "Europe/London";
@@ -100,108 +139,127 @@ async function ensureEveningDebriefJobs() {
   return { ok: true, users: users.length };
 }
 
-async function ensureNudgeJobs() {
-  console.log(`\n🔧 ensureNudgeJobs STARTING at ${new Date().toISOString()}`);
+async function ensureStudyNudgeJobs() {
+  console.log(`\n🔧 ensureStudyNudgeJobs STARTING at ${new Date().toISOString()}`);
   
   const users = await prisma.user.findMany({
-    select: { id: true, tz: true, nudgesEnabled: true },
+    where: { nudgesEnabled: true },
+    select: { id: true, tz: true },
   });
   
-  console.log(`🔧 Found ${users.length} total users, filtering for nudgesEnabled...`);
+  console.log(`🔧 Found ${users.length} users with nudges enabled`);
 
-  let enabledCount = 0;
   for (const u of users) {
-    if (!u.nudgesEnabled) continue;
-    enabledCount++;
-    
     const tz = u.tz || "Europe/London";
-    console.log(`🔧 Processing user ${u.id} (tz: ${tz})`);
 
-    // Remove existing nudge jobs for this user to prevent duplicates
+    // Remove existing to prevent duplicates
     const jobIds = [
-      `nudge-morning:${u.id}`,
-      `nudge-afternoon:${u.id}`,
-      `nudge-evening:${u.id}`,
+      `study-nudge-morning:${u.id}`,
+      `study-nudge-afternoon:${u.id}`,
+      `study-nudge-evening:${u.id}`,
     ];
     
     for (const jobId of jobIds) {
       try {
         const job = await schedulerQueue.getJob(jobId);
-        if (job) {
-          console.log(`🗑️ Removing existing job: ${jobId}`);
-          await job.remove();
-        }
+        if (job) await job.remove();
       } catch (err) {
-        // Job doesn't exist, that's fine
+        // Job doesn't exist
       }
     }
 
-    // Morning nudge (10am)
+    // Morning study nudge (10am)
     await schedulerQueue.add(
-      "nudge",
+      "study-nudge",
       { userId: u.id, trigger: "morning_momentum" },
       {
         repeat: { pattern: "0 10 * * *", tz },
-        jobId: `nudge-morning:${u.id}`,
+        jobId: `study-nudge-morning:${u.id}`,
         removeOnComplete: true,
         removeOnFail: true,
       }
     );
-    console.log(`✅ Scheduled morning nudge for ${u.id}`);
 
-    // Afternoon nudge (2pm)
+    // Afternoon drift check (2pm)
     await schedulerQueue.add(
-      "nudge",
+      "study-nudge",
       { userId: u.id, trigger: "afternoon_drift" },
       {
         repeat: { pattern: "0 14 * * *", tz },
-        jobId: `nudge-afternoon:${u.id}`,
+        jobId: `study-nudge-afternoon:${u.id}`,
         removeOnComplete: true,
         removeOnFail: true,
       }
     );
-    console.log(`✅ Scheduled afternoon nudge for ${u.id}`);
 
-    // Evening nudge (6pm)
+    // Evening progress check (6pm)
     await schedulerQueue.add(
-      "nudge",
+      "study-nudge",
       { userId: u.id, trigger: "evening_closeout" },
       {
         repeat: { pattern: "0 18 * * *", tz },
-        jobId: `nudge-evening:${u.id}`,
+        jobId: `study-nudge-evening:${u.id}`,
         removeOnComplete: true,
         removeOnFail: true,
       }
     );
-    console.log(`✅ Scheduled evening nudge for ${u.id}`);
   }
   
-  console.log(`🔧 ensureNudgeJobs COMPLETE: ${enabledCount} users with nudges enabled\n`);
+  console.log(`✅ Study nudges scheduled for ${users.length} users\n`);
   return { ok: true, users: users.length };
 }
 
-async function runDailyBrief(userId: string) {
-  const text =
-    (await aiService.generateMorningBrief(userId).catch(() => null)) ||
-    "Good morning.";
+async function ensureNudgeJobs() {
+  // Redirect to study nudges
+  return ensureStudyNudgeJobs();
+}
 
-  let audioUrl: string | null = null;
+async function runDailyIntel(userId: string) {
+  console.log(`\n📊 ================================`);
+  console.log(`📊 Generating Daily Intel`);
+  console.log(`📊 User: ${userId}`);
+  console.log(`📊 Time: ${new Date().toISOString()}`);
+  console.log(`📊 ================================\n`);
+
   try {
-    audioUrl = await voiceService.ttsToUrl(userId, text, "future-you");
-  } catch {
-    audioUrl = null;
+    const intel = await aiService.generateDailyIntel(userId);
+
+    // Store as CoachMessage (kind = intel)
+    await coachMessageService.createMessage(userId, "intel" as any, intel.fullText, {
+      threatAssessment: intel.threatAssessment,
+      weaknesses: intel.weaknesses,
+      predictions: intel.predictions,
+      missions: intel.todaysMissions,
+      insights: intel.insights,
+    });
+
+    // Event for memory
+    await prisma.event.create({
+      data: {
+        userId,
+        type: "daily_intel",
+        payload: intel,
+      },
+    });
+
+    // Push notification
+    await notificationsService.send(
+      userId,
+      "📊 Daily Intel",
+      intel.threatAssessment.slice(0, 180)
+    );
+
+    console.log(`✅ Daily Intel complete for ${userId}\n`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`❌ Daily Intel failed for ${userId}:`, err);
+    return { ok: false, error: String(err) };
   }
+}
 
-  // Store as CoachMessage (kind = brief)
-  await coachMessageService.createMessage(userId, "brief", text, { audioUrl });
-
-  // Backwards compat event
-  await prisma.event.create({
-    data: { userId, type: "morning_brief", payload: { text, audioUrl } },
-  });
-
-  await notificationsService.send(userId, "Morning Brief", text.slice(0, 180));
-  return { ok: true };
+async function runDailyBrief(userId: string) {
+  // Redirect to Intel for now, or keep old logic for backward compat
+  return runDailyIntel(userId);
 }
 
 async function runEveningDebrief(userId: string) {
@@ -228,87 +286,196 @@ async function runEveningDebrief(userId: string) {
   return { ok: true };
 }
 
-async function runNudge(userId: string, trigger: string) {
+async function runStudyNudge(userId: string, trigger: string) {
   const timestamp = new Date().toISOString();
   console.log(`\n🔔 ================================`);
-  console.log(`🔔 runNudge CALLED`);
+  console.log(`🔔 STUDY NUDGE`);
   console.log(`🔔 Time: ${timestamp}`);
   console.log(`🔔 User: ${userId}`);
   console.log(`🔔 Trigger: ${trigger}`);
   console.log(`🔔 ================================\n`);
   
-  const text =
-    (await aiService.generateNudge(userId, trigger).catch(() => null)) ||
-    "Check in with yourself.";
+  try {
+    const text = await aiService.generateStudyNudge(userId, trigger);
+    console.log(`📝 Generated nudge: "${text.substring(0, 80)}..."`);
 
-  console.log(`📝 Generated nudge text: "${text.substring(0, 80)}..."`);
+    // Store as CoachMessage
+    await coachMessageService.createMessage(userId, "nudge", text, { trigger });
 
-  // Store as CoachMessage (kind = nudge)
-  const msg = await coachMessageService.createMessage(userId, "nudge", text, { trigger });
-  console.log(`✅ CoachMessage created: ${msg.id}`);
+    // Event for memory
+    await prisma.event.create({
+      data: { userId, type: "study_nudge", payload: { text, trigger } },
+    });
 
-  // Backwards compat event
-  const event = await prisma.event.create({
-    data: { userId, type: "nudge", payload: { text, trigger } },
-  });
-  console.log(`✅ Event created: ${event.id}`);
+    // Push notification
+    await notificationsService.send(userId, "🔥 Study Push", text.slice(0, 180));
 
-  await notificationsService.send(userId, "Nudge", text.slice(0, 180));
-  console.log(`✅ Notification sent`);
-  
-  console.log(`🔔 runNudge COMPLETED for ${userId}\n`);
-  return { ok: true };
+    console.log(`✅ Study nudge complete for ${userId}\n`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`❌ Study nudge failed:`, err);
+    return { ok: false, error: String(err) };
+  }
+}
+
+async function runNudge(userId: string, trigger: string) {
+  // Redirect to study nudge
+  return runStudyNudge(userId, trigger);
 }
 
 async function autoNudgesHourly() {
-  const users = await prisma.user.findMany({
-    select: { id: true, plan: true },
+  // DEPRECATED - nudges now handled by scheduled jobs (10am, 2pm, 6pm)
+  // using AI-generated study-aware nudges
+  return { ok: true };
+}
+
+async function checkExamThresholds() {
+  console.log(`\n🚨 Checking exam thresholds at ${new Date().toISOString()}`);
+
+  const now = new Date();
+  const twoWeeksOut = new Date(now.getTime() + 14 * 86400000);
+
+  const exams = await prisma.exam.findMany({
+    where: {
+      date: {
+        gte: now,
+        lte: twoWeeksOut,
+      },
+    },
+    include: { user: true },
   });
 
-  for (const u of users) {
-    if (u.plan !== "PRO" && !FREE_NOTIFICATIONS_ENABLED) continue;
+  console.log(`📋 Found ${exams.length} exams in next 14 days`);
 
-    const res = await nudgesService.generateNudges(u.id);
-    const n = Array.isArray(res)
-      ? res[0]
-      : (res as any).nudges?.[0];
-
-    if (!n?.message) continue;
-
-    await notificationsService.send(
-      u.id,
-      "Nudge",
-      n.message.slice(0, 180)
+  let alertsSent = 0;
+  for (const exam of exams) {
+    const daysRemaining = Math.ceil(
+      (new Date(exam.date).getTime() - now.getTime()) / 86400000
     );
+
+    // Fire alerts at exact thresholds
+    if ([14, 7, 3, 1].includes(daysRemaining)) {
+      console.log(`🚨 THRESHOLD ALERT: ${exam.subject} in ${daysRemaining} days`);
+
+      // Get full exam threat data
+      const consciousness = await studyIntelligence.buildStudyConsciousness(exam.userId);
+      const threat = consciousness.exams.find((e) => e.examId === exam.id);
+
+      if (threat) {
+        const alertText = aiStudyPrompts.buildExamAlert(threat, daysRemaining);
+
+        await coachMessageService.createMessage(exam.userId, "exam_alert" as any, alertText, {
+          examId: exam.id,
+          threshold: daysRemaining,
+          subject: exam.subject,
+        });
+
+        await notificationsService.send(
+          exam.userId,
+          `🚨 ${exam.subject} in ${daysRemaining} days`,
+          alertText.slice(0, 180)
+        );
+
+        alertsSent++;
+      }
+    }
   }
-  return { ok: true };
+
+  console.log(`✅ Sent ${alertsSent} exam threshold alerts\n`);
+  return { ok: true, checked: exams.length, alertsSent };
+}
+
+async function pushWeakTopics() {
+  console.log(`\n⚡ Pushing weak topics at ${new Date().toISOString()}`);
+
+  const users = await prisma.user.findMany({
+    where: { studyReminders: true },
+    select: { id: true },
+  });
+
+  let pushesSent = 0;
+  for (const user of users) {
+    try {
+      const consciousness = await studyIntelligence.buildStudyConsciousness(user.id);
+
+      // If weak topics + upcoming exams = send push
+      if (consciousness.weakTopics.length > 0 && consciousness.exams.length > 0) {
+        const criticalWeakness = consciousness.weakTopics[0];
+        const relatedExam = consciousness.exams.find((e) =>
+          e.subject.toLowerCase().includes(criticalWeakness.split(" - ")[0].toLowerCase())
+        );
+
+        if (relatedExam && relatedExam.daysRemaining < 30) {
+          const nudgeText = `${criticalWeakness} is still weak (${consciousness.topicMastery[criticalWeakness] || 40}%). ${relatedExam.subject} exam in ${relatedExam.daysRemaining} days. Attack this today.`;
+
+          await coachMessageService.createMessage(
+            user.id,
+            "mastery_alert" as any,
+            nudgeText,
+            {
+              trigger: "weak_topic_push",
+              topic: criticalWeakness,
+              examId: relatedExam.examId,
+            }
+          );
+
+          await notificationsService.send(
+            user.id,
+            "⚡ Weak Topic Alert",
+            nudgeText.slice(0, 180)
+          );
+
+          pushesSent++;
+        }
+      }
+    } catch (err) {
+      console.error(`Failed weak topic push for ${user.id}:`, err);
+    }
+  }
+
+  console.log(`✅ Sent ${pushesSent} weak topic alerts\n`);
+  return { ok: true, sent: pushesSent };
+}
+
+async function analyzeStudySession(sessionId: string) {
+  console.log(`\n🔍 Analyzing study session: ${sessionId}`);
+
+  try {
+    const session = await prisma.studySession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      console.warn(`⚠️ Session ${sessionId} not found`);
+      return { ok: false };
+    }
+
+    // Update mastery from session
+    await studyIntelligence.updateMasteryFromSession(session);
+
+    // Recalculate exam threats
+    await studyIntelligence.recalculateExamThreats(session.userId);
+
+    console.log(`✅ Session ${sessionId} analyzed\n`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`❌ Session analysis failed:`, err);
+    return { ok: false, error: String(err) };
+  }
 }
 
 async function runWeeklyConsolidation() {
   const users = await prisma.user.findMany({ select: { id: true } });
-  console.log(`📅 Running weekly consolidation for ${users.length} users...`);
+  console.log(`📅 Running weekly study consolidation for ${users.length} users...`);
 
   for (const u of users) {
     try {
-      const { insightsService } = await import("../services/insights.service");
-      const result = await insightsService.weeklyConsolidation(u.id);
-      if (result.ok) {
-        // Notify about weekly letter if generated
-        if (result.letterText) {
-          await notificationsService.send(
-            u.id,
-            "📜 Weekly Letter from Future You",
-            result.letterText.slice(0, 180)
-          );
-        } else if (result.reflection) {
-          // Fallback to reflection if letter generation failed
-          await notificationsService.send(
-            u.id,
-            "📊 Weekly Insights",
-            result.reflection.slice(0, 180)
-          );
-        }
-      }
+      // Rebuild patterns from last week
+      await studyIntelligence.extractStudyPatterns(u.id, []);
+      
+      // Could generate weekly report here
+      // For now, just log
+      console.log(`✅ Consolidated patterns for ${u.id}`);
     } catch (err) {
       console.error(`Failed weekly consolidation for ${u.id}:`, err);
     }
@@ -344,6 +511,25 @@ export function startWorker() {
       }
       
       switch (job.name) {
+        // Study OS jobs
+        case "ensure-daily-intel":
+          return ensureDailyIntelJobs();
+        case "ensure-study-nudges":
+          return ensureStudyNudgeJobs();
+        case "daily-intel":
+          return runDailyIntel(job.data.userId);
+        case "study-nudge":
+          return runStudyNudge(job.data.userId, job.data.trigger);
+        case "exam-thresholds":
+          return checkExamThresholds();
+        case "weak-topic-push":
+          return pushWeakTopics();
+        case "analyze-session":
+          return analyzeStudySession(job.data.sessionId);
+        case "weekly-consolidation":
+          return runWeeklyConsolidation();
+          
+        // Legacy/backward compat
         case "ensure-daily-briefs":
           return ensureDailyBriefJobs();
         case "ensure-evening-debriefs":
@@ -355,14 +541,10 @@ export function startWorker() {
         case "evening-debrief":
           return runEveningDebrief(job.data.userId);
         case "nudge":
-          console.log(`🏭 WORKER calling runNudge for user ${job.data.userId} with trigger "${job.data.trigger}"`);
-          const result = await runNudge(job.data.userId, job.data.trigger);
-          console.log(`🏭 WORKER nudge complete for user ${job.data.userId}`);
-          return result;
-        // REMOVED: auto-nudges-hourly case - no longer used
-        case "weekly-consolidation":
-          return runWeeklyConsolidation();
+          return runNudge(job.data.userId, job.data.trigger);
+          
         default:
+          console.warn(`⚠️ Unknown job type: ${job.name}`);
           return;
       }
     },

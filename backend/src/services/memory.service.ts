@@ -64,14 +64,8 @@ export class MemoryService {
       perHabit[hid].lastDate = (ev.payload as any)?.date || perHabit[hid].lastDate;
     }
 
-    const habits = await prisma.habit.findMany({ where: { userId } });
-    const habitSummaries = habits.map((h) => ({
-      id: h.id,
-      title: h.title,
-      streak: h.streak,
-      lastTick: h.lastTick,
-      ticks30d: perHabit[h.id]?.ticks || 0,
-    }));
+    // REMOVED: habit system - now using study sessions
+    const habitSummaries: any[] = [];
 
     return {
       facts: (facts?.json as Record<string, any>) || {},
@@ -155,7 +149,8 @@ Keep JSON valid and concise.
     const [factsRow, user, purposeProfile] = await Promise.all([
       prisma.userFacts.findUnique({ where: { userId } }),
       prisma.user.findUnique({ where: { id: userId } }),
-      prisma.futureYouPurposeProfile.findUnique({ where: { userId } }).catch(() => null),
+      // REMOVED: futureYouPurposeProfile - not needed for study OS
+      Promise.resolve(null),
     ]);
 
     const facts = (factsRow?.json as Record<string, any>) || {};

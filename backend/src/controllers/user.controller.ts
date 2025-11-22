@@ -39,8 +39,8 @@ export async function userController(fastify: FastifyInstance) {
           intensity: 2,
           mentorId: 'marcus',
           nudgesEnabled: true,
-          briefsEnabled: true,
-          debriefsEnabled: true,
+          intelEnabled: true,
+          studyReminders: true,
         },
       });
 

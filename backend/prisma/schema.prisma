@@ -18,6 +18,16 @@ enum Tone {
   light
 }
 
+enum CoachMessageKind {
+  nudge
+  brief
+  mirror
+  letter
+  intel // NEW - Daily Intel
+  exam_alert // NEW - Exam countdown alerts
+  mastery_alert // NEW - Weak topic push
+}
+
 model User {
   id           String  @id @default(cuid())
   email        String? @unique
@@ -28,77 +38,38 @@ model User {
   safeWord     String?
   plan         Plan    @default(FREE)
 
-  // NEW: OS-specific fields
-  mentorId        String? // e.g. "marcus" | "drill" | "confucius" | "lincoln" | "buddha"
-  fcmToken        String? // Firebase Cloud Messaging token for push
-  nudgesEnabled   Boolean @default(true)
-  briefsEnabled   Boolean @default(true)
-  debriefsEnabled Boolean @default(true)
+  // Study OS specific
+  mentorId       String? // AI personality (marcus, drill, etc)
+  fcmToken       String? // Firebase Cloud Messaging token for push
+  nudgesEnabled  Boolean @default(true)
+  intelEnabled   Boolean @default(true) // Daily Intel generation
+  studyReminders Boolean @default(true)
+
+  // Study preferences
+  grade         String? // "Year 11", "Sophomore", etc
+  studyGoals    String[] @default([])
+  learningStyle String? // "visual", "auditory", "kinesthetic"
+  weeklyGoal    Int      @default(600) // minutes per week (10 hours)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  habits          Habit[]
-  antiHabits      AntiHabit[]
-  alarms          Alarm[]
+  // Relations - Study OS
   events          Event[]
   userFacts       UserFacts?
-  tasks           Task[]
-  todaySelections TodaySelection[]
+  exams           Exam[]
+  studySessions   StudySession[]
+  topicMastery    TopicMastery[]
+  projects        Project[]
+  scannedProblems ScannedProblem[]
+  videoSummaries  VideoSummary[]
+  studyTargets    StudyTarget[]
+  coachMessages   CoachMessage[]
 }
 
-model Habit {
-  id              String    @id @default(cuid())
-  userId          String
-  title           String
-  schedule        Json      @default("{}")
-  streak          Int       @default(0)
-  lastTick        DateTime?
-  color           String    @default("emerald")
-  context         Json      @default("{}")
-  reminderEnabled Boolean   @default(false)
-  reminderTime    String?   @default("08:00")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  todaySelections TodaySelection[]
-
-  @@index([userId])
-}
-
-model AntiHabit {
-  id          String    @id @default(cuid())
-  userId      String
-  name        String
-  targetMins  Int       @default(10)
-  cleanStreak Int       @default(0)
-  lastSlip    DateTime?
-  dangerWin   Json?     @default("{}")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model Alarm {
-  id        String    @id @default(cuid())
-  userId    String
-  label     String
-  rrule     String
-  tone      Tone      @default(balanced)
-  enabled   Boolean   @default(true)
-  nextRun   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([nextRun])
-}
+// ============================================================
+// CORE SYSTEM MODELS (KEEP - Infrastructure)
+// ============================================================
 
 model Event {
   id        String   @id @default(cuid())
@@ -122,42 +93,6 @@ model UserFacts {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Task {
-  id          String    @id @default(cuid())
-  userId      String
-  title       String
-  description String?
-  dueDate     DateTime?
-  schedule    Json      @default("{}")
-  priority    Int       @default(1)
-  category    String?
-  completed   Boolean   @default(false)
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  todaySelections TodaySelection[]
-
-  @@index([userId])
-}
-
-model TodaySelection {
-  id        String   @id @default(cuid())
-  userId    String
-  habitId   String?
-  taskId    String?
-  date      String // YYYY-MM-DD format
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  habit Habit? @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  task  Task?  @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  @@index([userId, date])
-}
-
 model VoiceCache {
   id        String   @id
   text      String
@@ -168,150 +103,203 @@ model VoiceCache {
   @@index([createdAt])
 }
 
-model HabitSnapshot {
-  id     String   @id @default(cuid())
-  userId String
-  at     DateTime @default(now())
-  data   Json
-
-  @@index([userId])
-}
-
-model Completion {
-  id          String    @id @default(cuid())
-  userId      String
-  habitId     String
-  date        DateTime
-  done        Boolean   @default(false)
-  completedAt DateTime?
-
-  @@unique([userId, habitId, date])
-  @@index([userId])
-  @@index([date])
-}
-
-enum CoachMessageKind {
-  nudge
-  brief
-  mirror
-  letter
-}
-
 model CoachMessage {
   id        String           @id @default(cuid())
   userId    String
   kind      CoachMessageKind
   title     String
-  body      String
+  body      String           @db.Text
   meta      Json?
   createdAt DateTime         @default(now())
   readAt    DateTime?
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
+  @@index([userId, kind])
+  @@index([userId, createdAt])
 }
 
-model FutureYouPurposeProfile {
-  id             String    @id @default(cuid())
-  userId         String    @unique
-  lifeTask       String?
-  strengths      String[]  @default([])
-  valuesRank     String[]  @default([])
-  sdtAutonomy    Int?
-  sdtCompetence  Int?
-  sdtRelatedness Int?
-  flowContexts   String[]  @default([])
-  redTags        String[]  @default([])
-  odysseyPlans   Json?
-  keystones      String[]  @default([])
-  antiHabits     String[]  @default([])
-  lastReviewAt   DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+// ============================================================
+// STUDY OS MODELS (NEW)
+// ============================================================
+
+// 🎓 EXAMS
+model Exam {
+  id          String   @id @default(cuid())
+  userId      String
+  subject     String
+  topic       String? // "Organic Chemistry", "Cell Division", etc
+  date        DateTime
+  weight      Int      @default(100) // % of final grade
+  targetGrade String? // "A", "A+", "90%"
+  icon        String   @default("📚")
+
+  // Computed fields (updated by intelligence service)
+  daysRemaining Int     @default(0)
+  threatLevel   String  @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  progress      Int     @default(0) // 0-100% prep completion
+  prediction    String? // "72%", "B+", predicted outcome
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([threatLevel])
 }
 
-model FutureYouChapter {
-  id        String   @id @default(cuid())
-  userId    String
-  phase     String
-  title     String
-  bodyMd    String
-  words     Int
-  draftHash String
-  status    String   @default("final")
+// 📚 STUDY SESSIONS
+model StudySession {
+  id            String  @id @default(cuid())
+  userId        String
+  subject       String
+  topic         String?
+  minutes       Int
+  effectiveness Int? // 1-10 self-rating (optional)
+  notes         String? @db.Text
+
+  // Auto-calculated by intelligence service
+  masteryDelta Float? // change in mastery score after session
+  focusScore   Int? // calculated from duration/effectiveness
+
   createdAt DateTime @default(now())
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([userId, phase])
-  @@index([draftHash])
+  @@index([userId, createdAt])
+  @@index([subject])
 }
 
-model FutureYouBookEdition {
-  id         String   @id @default(cuid())
+// 🎯 TOPIC MASTERY TRACKING
+model TopicMastery {
+  id         String @id @default(cuid())
   userId     String
-  version    Int
-  title      String
-  bodyMd     String
-  chapterIds String[]
+  subject    String
+  topic      String
+  score      Int    @default(0) // 0-100
+  confidence Int    @default(50) // how confident they feel (1-100)
+
+  lastStudied   DateTime?
+  totalMinutes  Int       @default(0)
+  sessionsCount Int       @default(0)
+
+  // Pattern tracking (derived from sessions)
+  peakTimes String[] @default([]) // ["9am-11am", "2pm-4pm"]
+  struggles String[] @default([]) // common mistakes/weak areas
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subject, topic])
+  @@index([userId])
+  @@index([userId, score])
+}
+
+// 🤖 PROJECTS (Canvas/Neural Tab - Chat Sessions)
+model Project {
+  id          String  @id @default(cuid())
+  userId      String
+  name        String
+  emoji       String  @default("📚")
+  description String? @db.Text
+  pinned      Boolean @default(false)
+
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastActive DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
 
   @@index([userId])
+  @@index([userId, lastActive])
 }
 
-model FutureYouJob {
-  id         String    @id @default(cuid())
-  userId     String
-  type       String
-  payload    Json
-  status     String    @default("queued")
-  error      String?
-  insertedAt DateTime  @default(now())
-  startedAt  DateTime?
-  finishedAt DateTime?
-  idemKey    String    @unique
+// 💬 MESSAGES (Chat History per Project)
+model Message {
+  id        String @id @default(cuid())
+  projectId String
+  role      String // "user" | "assistant"
+  content   String @db.Text
 
-  @@index([userId])
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
 }
 
-// NEW: Life's Task Discovery Engine Tables (Standalone System)
-model LifeTaskChapter {
-  id                     String    @id @default(cuid())
-  userId                 String
-  chapterNumber          Int // 1-7
-  conversationTranscript Json // Full message history
-  extractedPatterns      Json? // Red threads, values, strengths
-  proseText              String? // 350-600 word generated chapter
-  completedAt            DateTime?
-  timeSpentMinutes       Int       @default(0)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+// 🔍 SCANNED PROBLEMS (OCR + AI Solve)
+model ScannedProblem {
+  id      String  @id @default(cuid())
+  userId  String
+  subject String?
+  topic   String?
 
-  @@unique([userId, chapterNumber])
+  imageUrl    String? // S3 URL if stored
+  ocrText     String  @db.Text
+  solution    String  @db.Text
+  explanation String  @db.Text
+
+  saved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([userId, chapterNumber])
+  @@index([userId, createdAt])
 }
 
-model LifeTaskArtifact {
-  id           String   @id @default(cuid())
-  userId       String
-  artifactType String // 'story_map', 'shadow_map', 'strengths_grid', etc.
-  data         Json // Artifact-specific structure
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// 🎥 VIDEO SUMMARIES
+model VideoSummary {
+  id      String  @id @default(cuid())
+  userId  String
+  title   String
+  url     String?
+  subject String?
+  topic   String?
 
-  @@unique([userId, artifactType])
+  transcript String?  @db.Text
+  summary    String   @db.Text
+  keyPoints  String[] @default([])
+
+  saved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([userId, artifactType])
+  @@index([userId, createdAt])
 }
 
-model LifeTaskBook {
-  id               String   @id @default(cuid())
-  userId           String
-  title            String
-  compiledMarkdown String   @db.Text // Full book content
-  chapterIds       String[] // References to LifeTaskChapter ids
-  createdAt        DateTime @default(now())
-  version          Int      @default(1)
+// 🎯 STUDY TARGETS (User-created from Flutter FAB)
+model StudyTarget {
+  id          String  @id @default(cuid())
+  userId      String
+  title       String
+  description String? @db.Text
+  emoji       String  @default("🎯")
+
+  startDate DateTime
+  endDate   DateTime
+
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, version])
+  @@index([userId, completed])
 }

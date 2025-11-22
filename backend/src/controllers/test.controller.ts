@@ -141,24 +141,22 @@ export async function testController(fastify: FastifyInstance) {
         console.log(`✅ Created test user: ${userId}`);
       }
 
-      const { nudgesService } = await import('../services/nudges.service');
       const { insightsService } = await import('../services/insights.service');
 
-      // 1. Generate morning brief
-      const habits = await prisma.habit.findMany({ where: { userId } });
+      // 1. Generate morning Intel (replaced brief)
       const recent = await prisma.event.findMany({
         where: { userId },
         orderBy: { ts: 'desc' },
         take: 50,
       });
 
-      const briefPrompt = `Morning brief. Set 2–3 actionable orders for today.`;
-      const briefText = await aiService.generateFutureYouReply(userId, briefPrompt, { 
-        purpose: 'brief', 
-        maxChars: 500 
+      const intelPrompt = `Generate daily Intel with threat assessment and study missions.`;
+      const intelText = await aiService.generateFutureYouReply(userId, intelPrompt, { 
+        purpose: 'intel', 
+        maxChars: 1000 
       });
       await prisma.event.create({
-        data: { userId, type: 'morning_brief', payload: { text: briefText } },
+        data: { userId, type: 'daily_intel', payload: { text: intelText } },
       });
 
       // 2. Generate evening debrief
@@ -173,8 +171,9 @@ export async function testController(fastify: FastifyInstance) {
         data: { userId, type: 'evening_debrief', payload: { text: debriefText } },
       });
 
-      // 3. Generate smart nudge
-      const nudgeResult = await nudgesService.generateNudges(userId);
+      // 3. Generate smart study nudge
+      const nudgeText = await aiService.generateStudyNudge(userId, "test_trigger");
+      const nudgeResult = { nudges: [{ message: nudgeText }] };
 
       // 4. Generate insights
       const insights = await insightsService.analyzePatterns(userId);
@@ -182,7 +181,7 @@ export async function testController(fastify: FastifyInstance) {
       console.log(`✅ Generated ALL messages for ${userId}`);
       return { 
         ok: true, 
-        brief: briefText,
+        intel: intelText,
         debrief: debriefText,
         nudge: nudgeResult,
         insightsCount: insights.length,

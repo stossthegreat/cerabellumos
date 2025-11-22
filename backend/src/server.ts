@@ -15,13 +15,25 @@ import { chatController } from "./controllers/chat.controller";
 import { userController } from "./controllers/user.controller";
 import { testController } from "./controllers/test.controller";
 import { insightsController } from "./controllers/insights.controller";
-import { whatIfController } from "./controllers/whatif.controller";
-import { futureYouChatController } from "./controllers/future-you-chat.controller";
-import { whatIfChatController } from "./controllers/what-if-chat.controller";
-import { futureYouChatControllerV2 } from "./controllers/future-you-v2.controller";
-import { reflectionsController } from "./controllers/reflections.controller";
-import { futureYouRouter } from "./modules/futureyou/router";
-import { lifeTaskRouter } from "./modules/lifetask/router";
+
+// Study OS Controllers
+import { intelController } from "./controllers/intel.controller";
+import { studySessionsController } from "./controllers/study-sessions.controller";
+import { examsController } from "./controllers/exams.controller";
+import { masteryController } from "./controllers/mastery.controller";
+import { scannerController } from "./controllers/scanner.controller";
+import { videoController } from "./controllers/video.controller";
+import { projectsController } from "./controllers/projects.controller";
+import { studyTargetsController } from "./controllers/study-targets.controller";
+
+// Legacy controllers (keeping for now, can remove later)
+// import { whatIfController } from "./controllers/whatif.controller";
+// import { futureYouChatController } from "./controllers/future-you-chat.controller";
+// import { whatIfChatController } from "./controllers/what-if-chat.controller";
+// import { futureYouChatControllerV2 } from "./controllers/future-you-v2.controller";
+// import { reflectionsController } from "./controllers/reflections.controller";
+// import { futureYouRouter } from "./modules/futureyou/router";
+// import { lifeTaskRouter } from "./modules/lifetask/router";
 
 dotenv.config();
 
@@ -56,7 +68,7 @@ const buildServer = () => {
   fastify.register(swagger, {
     openapi: {
       openapi: "3.0.0",
-      info: { title: "Future You OS Brain API", version: "1.0.0" },
+      info: { title: "Cerebellum Study OS API", version: "1.0.0" },
       servers: [{ url: process.env.BACKEND_PUBLIC_URL || "http://localhost:8080" }],
     },
   });
@@ -64,7 +76,8 @@ const buildServer = () => {
 
   // Public routes (no auth required)
   fastify.get("/", async () => ({
-    message: "Future You OS Brain running",
+    message: "Cerebellum Study OS Brain running",
+    version: "1.0.0",
     docs: "/docs",
     health: "/health",
     status: "ok",
@@ -123,29 +136,23 @@ const buildServer = () => {
     // Add auth middleware hook for all routes in this scope
     protectedRoutes.addHook('preHandler', authMiddleware);
     
-    // Register all protected controllers
-    protectedRoutes.register(chatController);
-    protectedRoutes.register(nudgesController);
-    protectedRoutes.register(coachController);
-    protectedRoutes.register(systemController);
-    protectedRoutes.register(userController);
-    protectedRoutes.register(insightsController); // Pattern analysis & insights
-    protectedRoutes.register(whatIfController); // Purpose-aligned goals
-    protectedRoutes.register(reflectionsController); // User reflection capture (NEW)
+    // CORE controllers (keep)
+    protectedRoutes.register(chatController);       // General chat
+    protectedRoutes.register(nudgesController);     // Nudges (adapted for study)
+    protectedRoutes.register(coachController);      // Coach messages
+    protectedRoutes.register(systemController);     // System endpoints
+    protectedRoutes.register(userController);       // User management
+    protectedRoutes.register(insightsController);   // Pattern insights (KEEP!)
     
-    // V1 Chat (structured discovery + simple coach)
-    protectedRoutes.register(futureYouChatController); // Future-You freeform chat (7 lenses)
-    protectedRoutes.register(whatIfChatController); // What-If implementation coach
-    
-    // V2 Chat (hybrid dual-brain architecture)
-    protectedRoutes.register(futureYouChatControllerV2); // Future-You v2 - emotion + contradiction aware
-    // V2 removed - using V3 (now main what-if-chat service)
-    
-    // Future-You Unified Engine (Phase 1: Coaching + Chapters)
-    protectedRoutes.register(futureYouRouter); // 7-phase purpose coaching
-    
-    // Life's Task Discovery Engine (New standalone system)
-    protectedRoutes.register(lifeTaskRouter); // Deep excavation + prose chapters
+    // STUDY OS controllers (NEW)
+    protectedRoutes.register(intelController);          // Daily Intel generation
+    protectedRoutes.register(studySessionsController);  // Log & track sessions
+    protectedRoutes.register(examsController);          // Exam management
+    protectedRoutes.register(masteryController);        // Topic mastery tracking
+    protectedRoutes.register(scannerController);        // OCR + AI solve
+    protectedRoutes.register(videoController);          // Video summaries
+    protectedRoutes.register(projectsController);       // Neural tab chat projects
+    protectedRoutes.register(studyTargetsController);   // Study targets from Flutter
   });
   
   // Test routes (optional - can be public or protected based on needs)
@@ -156,7 +163,7 @@ const buildServer = () => {
 
 const start = async () => {
   try {
-    console.log("🚀 Starting Future You OS Brain...");
+    console.log("🚀 Starting Cerebellum Study OS Brain...");
     validateEnv();
     const server = buildServer();
 
@@ -164,8 +171,10 @@ const start = async () => {
     const host = process.env.HOST || "0.0.0.0";
     await server.listen({ port, host });
 
+    console.log("✅ Cerebellum OS Brain running");
     console.log("📖 Docs: /docs | 🩺 Health: /health");
     console.log("⚠️ Note: Schedulers run in separate worker.ts process");
+    console.log("🧠 Study Intelligence Active");
   } catch (err) {
     console.error("❌ Startup failed:", err);
     process.exit(1);

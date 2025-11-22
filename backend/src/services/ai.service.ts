@@ -4,6 +4,8 @@ import OpenAI from "openai";
 import { prisma } from "../utils/db";
 import { memoryService } from "./memory.service";
 import { memoryIntelligence, UserConsciousness } from "./memory-intelligence.service";
+import { studyIntelligence, StudyConsciousness } from "./study-intelligence.service";
+import { aiStudyPrompts } from "./ai-study-prompts.service";
 import { semanticMemory } from "./semanticMemory.service";
 import { shortTermMemory } from "./short-term-memory.service";
 import { aiPromptService } from "./ai-os-prompts.service";
@@ -25,7 +27,7 @@ function getOpenAIClient() {
 }
 
 type GenerateOptions = {
-  purpose?: "brief" | "nudge" | "debrief" | "coach" | "letter";
+  purpose?: "brief" | "nudge" | "debrief" | "coach" | "letter" | "intel" | "scan" | "video";
   maxChars?: number;
 };
 
@@ -1092,6 +1094,490 @@ Do not use mystical metaphors — be clear and unforgivingly honest.`;
       case "coach":
       default:
         return `${safeName}, stop waiting for a perfect plan. Take one clear action in the next 10 minutes that your future self would respect.`;
+    }
+  }
+
+  // ============================================================
+  // 🎓 STUDY OS METHODS (NEW)
+  // ============================================================
+
+  /**
+   * 📊 Generate Daily Intel (fires at 7am via scheduler)
+   */
+  async generateDailyIntel(userId: string): Promise<{
+    threatAssessment: string;
+    weaknesses: string[];
+    predictions: string[];
+    todaysMissions: Array<{ task: string; priority: string; time: string }>;
+    insights: string[];
+    fullText: string;
+  }> {
+    try {
+      const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+      const prompt = aiStudyPrompts.buildIntelPrompt(consciousness);
+
+      const fullText = await this.generateWithConsciousnessPrompt(userId, prompt, {
+        purpose: "intel",
+        maxChars: 2500,
+      });
+
+      // Parse structured output
+      const parsed = this.parseIntelOutput(fullText, consciousness);
+
+      // Store in semantic memory
+      await semanticMemory.storeMemory({
+        userId,
+        type: "intel" as any,
+        text: fullText,
+        metadata: { 
+          examCount: consciousness.exams.length,
+          weakTopics: consciousness.weakTopics.length,
+        },
+        importance: 5,
+      });
+
+      return parsed;
+    } catch (err) {
+      console.error("⚠️ generateDailyIntel failed:", err);
+      
+      // Fallback
+      return {
+        threatAssessment: "Unable to generate Intel. System will retry.",
+        weaknesses: [],
+        predictions: [],
+        todaysMissions: [],
+        insights: [],
+        fullText: "Intel generation temporarily unavailable.",
+      };
+    }
+  }
+
+  /**
+   * 🔔 Generate Study Nudge (adaptive intensity based on exams)
+   */
+  async generateStudyNudge(userId: string, trigger: string): Promise<string> {
+    try {
+      const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+
+      // Determine intensity based on exam proximity
+      let intensity: "medium" | "high" | "nuclear" = "medium";
+      if (consciousness.examProximity === "CRITICAL") intensity = "nuclear";
+      else if (consciousness.examProximity === "HIGH") intensity = "high";
+
+      const prompt = aiStudyPrompts.buildStudyNudgePrompt(consciousness, trigger, intensity);
+
+      const text = await this.generateWithConsciousnessPrompt(userId, prompt, {
+        purpose: "nudge",
+        maxChars: 300,
+      });
+
+      return text;
+    } catch (err) {
+      console.error("⚠️ generateStudyNudge failed:", err);
+      return "Time to study. You know what needs to be done.";
+    }
+  }
+
+  /**
+   * 🔍 Solve Scanned Problem
+   */
+  async solveProblem(
+    userId: string,
+    ocrText: string,
+    subject?: string
+  ): Promise<{
+    solution: string;
+    explanation: string;
+    topic: string;
+    steps: string[];
+  }> {
+    const openai = getOpenAIClient();
+    if (!openai) throw new Error("AI not available");
+
+    const completion = await openai.chat.completions.create({
+      model: OPENAI_MODEL,
+      max_completion_tokens: 3000,
+      messages: [
+        {
+          role: "system",
+          content: `You are an elite study AI. Solve this problem with crystal clarity.
+
+Output format (STRICT):
+
+SOLUTION:
+[final answer]
+
+EXPLANATION:
+[step-by-step explanation]
+
+TOPIC:
+[specific topic, e.g., "Organic Chemistry - Alkene Reactions"]
+
+STEPS:
+1. [first step]
+2. [second step]
+3. [third step]
+...
+
+Be clear, precise, and educational. Show your work.`,
+        },
+        {
+          role: "user",
+          content: `Problem:\n${ocrText}\n\nSubject: ${subject || "Unknown"}`,
+        },
+      ],
+    });
+
+    const raw = completion.choices[0]?.message?.content || "";
+    const parsed = this.parseSolutionOutput(raw);
+
+    // Store in semantic memory
+    await semanticMemory.storeMemory({
+      userId,
+      type: "scan_solve" as any,
+      text: `Problem: ${ocrText.slice(0, 200)}\nSolution: ${parsed.solution}`,
+      metadata: { subject, topic: parsed.topic },
+      importance: 4,
+    });
+
+    // Update topic mastery if we identified the topic
+    if (parsed.topic && subject) {
+      const topicName = parsed.topic.split(" - ")[1] || parsed.topic;
+      await this.updateTopicMasteryFromSolve(userId, subject, topicName);
+    }
+
+    return parsed;
+  }
+
+  /**
+   * 🎥 Summarize Video Content
+   */
+  async summarizeVideo(
+    userId: string,
+    transcript: string,
+    title: string
+  ): Promise<{
+    summary: string;
+    keyPoints: string[];
+    subject?: string;
+    topic?: string;
+    concepts: string[];
+  }> {
+    const openai = getOpenAIClient();
+    if (!openai) throw new Error("AI not available");
+
+    const completion = await openai.chat.completions.create({
+      model: OPENAI_MODEL,
+      max_completion_tokens: 2000,
+      messages: [
+        {
+          role: "system",
+          content: `Analyze this educational video and extract key learning points.
+
+Output format (STRICT):
+
+SUBJECT:
+[subject area, e.g., "Chemistry", "Biology", "Mathematics"]
+
+TOPIC:
+[specific topic, e.g., "Organic Reactions", "Cell Division"]
+
+SUMMARY:
+[2-3 paragraph summary of the video content]
+
+KEY POINTS:
+- [key point 1]
+- [key point 2]
+- [key point 3]
+
+CONCEPTS:
+- [main concept 1]
+- [main concept 2]
+- [main concept 3]
+
+Be clear, educational, and focused on what the student needs to remember.`,
+        },
+        {
+          role: "user",
+          content: `Title: ${title}\n\nTranscript:\n${transcript.slice(0, 8000)}`,
+        },
+      ],
+    });
+
+    const raw = completion.choices[0]?.message?.content || "";
+    const parsed = this.parseVideoSummary(raw);
+
+    // Store in semantic memory
+    await semanticMemory.storeMemory({
+      userId,
+      type: "video_summary" as any,
+      text: `Video: ${title}\nSummary: ${parsed.summary.slice(0, 500)}`,
+      metadata: { subject: parsed.subject, topic: parsed.topic, title },
+      importance: 3,
+    });
+
+    return parsed;
+  }
+
+  /**
+   * 💬 Generate Project Reply (Neural tab chat with consciousness)
+   */
+  async generateProjectReply(
+    userId: string,
+    userMessage: string,
+    conversationHistory: any[]
+  ): Promise<string> {
+    const openai = getOpenAIClient();
+    if (!openai) throw new Error("AI not available");
+
+    // Build consciousness for context
+    const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+
+    // Build context from consciousness
+    const contextLines: string[] = [];
+    contextLines.push(`Student: ${consciousness.identity.name}`);
+    if (consciousness.identity.grade) {
+      contextLines.push(`Grade: ${consciousness.identity.grade}`);
+    }
+    
+    if (consciousness.exams.length > 0) {
+      contextLines.push(`\nUpcoming exams:`);
+      consciousness.exams.slice(0, 3).forEach(e => {
+        contextLines.push(`- ${e.subject}: ${e.daysRemaining} days (${e.prediction})`);
+      });
+    }
+
+    if (consciousness.weakTopics.length > 0) {
+      contextLines.push(`\nWeak topics: ${consciousness.weakTopics.slice(0, 3).join(", ")}`);
+    }
+
+    const context = contextLines.join("\n");
+
+    // Build messages array
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: `You are an elite AI study tutor. You are:
+- Direct and clear (no fluff)
+- Brutally honest about what they need to work on
+- Focused on mastery and exam success
+- Aware of their weaknesses and upcoming exams
+
+CONTEXT ABOUT THIS STUDENT:
+${context}
+
+Respond to their question with clarity and precision. If they're asking about a weak topic, push them harder. If they're avoiding exam prep, call it out.`,
+      },
+    ];
+
+    // Add conversation history (last 10 messages)
+    const recentHistory = conversationHistory.slice(-10);
+    for (const msg of recentHistory) {
+      messages.push({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      });
+    }
+
+    // Add current message
+    messages.push({
+      role: "user",
+      content: userMessage,
+    });
+
+    const completion = await openai.chat.completions.create({
+      model: OPENAI_MODEL,
+      max_completion_tokens: 1500,
+      messages,
+    });
+
+    const reply = completion.choices[0]?.message?.content || "I'm here to help you dominate your studies. What do you need?";
+
+    // Store in semantic memory
+    await semanticMemory.storeMemory({
+      userId,
+      type: "chat" as any,
+      text: `User: ${userMessage}\nAI: ${reply}`,
+      metadata: { source: "neural_tab" },
+      importance: 2,
+    });
+
+    return reply;
+  }
+
+  // ============================================================
+  // 🔧 Parsing Helpers
+  // ============================================================
+  private parseIntelOutput(
+    rawText: string,
+    consciousness: StudyConsciousness
+  ): {
+    threatAssessment: string;
+    weaknesses: string[];
+    predictions: string[];
+    todaysMissions: Array<{ task: string; priority: string; time: string }>;
+    insights: string[];
+    fullText: string;
+  } {
+    // Extract sections using markers
+    const threatMatch = rawText.match(/🚨\s*THREAT ASSESSMENT[:\s]*([\s\S]*?)(?=⚡|$)/i);
+    const weakMatch = rawText.match(/⚡\s*WEAK POINTS[:\s]*([\s\S]*?)(?=📈|$)/i);
+    const predMatch = rawText.match(/📈\s*PREDICTIONS?[:\s]*([\s\S]*?)(?=🎯|$)/i);
+    const missionsMatch = rawText.match(/🎯\s*TODAY'?S MISSIONS[:\s]*([\s\S]*?)(?=💡|$)/i);
+    const insightsMatch = rawText.match(/💡\s*INSIGHTS?[:\s]*([\s\S]*?)$/i);
+
+    const threatAssessment = threatMatch
+      ? threatMatch[1].trim()
+      : `${consciousness.exams.length} exams upcoming.`;
+
+    const weaknesses = weakMatch
+      ? weakMatch[1]
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("-") || l.startsWith("•"))
+          .map((l) => l.replace(/^[-•]\s*/, ""))
+      : consciousness.weakTopics.slice(0, 3);
+
+    const predictions = predMatch
+      ? [predMatch[1].trim()]
+      : ["Based on current progress, outcomes look average."];
+
+    const missions = missionsMatch
+      ? missionsMatch[1]
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("-") || l.match(/^\d{1,2}:/))
+          .map((l) => {
+            const clean = l.replace(/^[-•]\s*/, "");
+            const timeMatch = clean.match(/^(\d{1,2}:\d{2})\s*(.+)/);
+            return timeMatch
+              ? {
+                  time: timeMatch[1],
+                  task: timeMatch[2],
+                  priority: "HIGH",
+                }
+              : {
+                  time: "TBD",
+                  task: clean,
+                  priority: "MEDIUM",
+                };
+          })
+      : [];
+
+    const insights = insightsMatch
+      ? [insightsMatch[1].trim()]
+      : ["Study patterns being analyzed."];
+
+    return {
+      threatAssessment,
+      weaknesses,
+      predictions,
+      todaysMissions: missions,
+      insights,
+      fullText: rawText,
+    };
+  }
+
+  private parseSolutionOutput(raw: string): {
+    solution: string;
+    explanation: string;
+    topic: string;
+    steps: string[];
+  } {
+    const solutionMatch = raw.match(/SOLUTION[:\s]*([\s\S]*?)(?=EXPLANATION|TOPIC|$)/i);
+    const explanationMatch = raw.match(/EXPLANATION[:\s]*([\s\S]*?)(?=TOPIC|STEPS|$)/i);
+    const topicMatch = raw.match(/TOPIC[:\s]*([\s\S]*?)(?=STEPS|$)/i);
+    const stepsMatch = raw.match(/STEPS[:\s]*([\s\S]*?)$/i);
+
+    const solution = solutionMatch ? solutionMatch[1].trim() : "Solution not generated";
+    const explanation = explanationMatch ? explanationMatch[1].trim() : raw;
+    const topic = topicMatch
+      ? topicMatch[1].trim().split("\n")[0]
+      : "General Problem Solving";
+
+    const steps = stepsMatch
+      ? stepsMatch[1]
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.match(/^\d+\./))
+          .map((l) => l.replace(/^\d+\.\s*/, ""))
+      : [];
+
+    return { solution, explanation, topic, steps };
+  }
+
+  private parseVideoSummary(raw: string): {
+    summary: string;
+    keyPoints: string[];
+    subject?: string;
+    topic?: string;
+    concepts: string[];
+  } {
+    const subjectMatch = raw.match(/SUBJECT[:\s]*([\s\S]*?)(?=TOPIC|SUMMARY|$)/i);
+    const topicMatch = raw.match(/TOPIC[:\s]*([\s\S]*?)(?=SUMMARY|KEY|$)/i);
+    const summaryMatch = raw.match(/SUMMARY[:\s]*([\s\S]*?)(?=KEY POINTS|CONCEPTS|$)/i);
+    const keyPointsMatch = raw.match(/KEY POINTS[:\s]*([\s\S]*?)(?=CONCEPTS|$)/i);
+    const conceptsMatch = raw.match(/CONCEPTS[:\s]*([\s\S]*?)$/i);
+
+    const subject = subjectMatch ? subjectMatch[1].trim().split("\n")[0] : undefined;
+    const topic = topicMatch ? topicMatch[1].trim().split("\n")[0] : undefined;
+    const summary = summaryMatch ? summaryMatch[1].trim() : raw;
+
+    const keyPoints = keyPointsMatch
+      ? keyPointsMatch[1]
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("-") || l.startsWith("•"))
+          .map((l) => l.replace(/^[-•]\s*/, ""))
+      : [];
+
+    const concepts = conceptsMatch
+      ? conceptsMatch[1]
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("-") || l.startsWith("•"))
+          .map((l) => l.replace(/^[-•]\s*/, ""))
+      : [];
+
+    return { summary, keyPoints, subject, topic, concepts };
+  }
+
+  private async updateTopicMasteryFromSolve(
+    userId: string,
+    subject: string,
+    topic: string
+  ): Promise<void> {
+    try {
+      const existing = await prisma.topicMastery.findUnique({
+        where: {
+          userId_subject_topic: { userId, subject, topic },
+        },
+      });
+
+      if (existing) {
+        // Small mastery increase for solving a problem
+        await prisma.topicMastery.update({
+          where: { id: existing.id },
+          data: {
+            score: Math.min(100, existing.score + 3),
+            lastStudied: new Date(),
+          },
+        });
+      } else {
+        // Create new with moderate initial score
+        await prisma.topicMastery.create({
+          data: {
+            userId,
+            subject,
+            topic,
+            score: 40,
+            confidence: 50,
+            lastStudied: new Date(),
+          },
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Failed to update mastery from solve:", err);
     }
   }
 }

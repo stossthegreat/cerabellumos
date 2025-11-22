@@ -10,7 +10,23 @@ const CHROMA_PATH = process.env.CHROMA_PATH;
 const CHROMA_COLLECTION_PREFIX = process.env.CHROMA_COLLECTION_PREFIX || "futureyou";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-type MemoryType = "brief" | "debrief" | "nudge" | "chat" | "habit" | "reflection";
+type MemoryType = 
+  | "brief"              // Legacy
+  | "debrief"            // Legacy
+  | "nudge"              // Keep
+  | "chat"               // Keep
+  | "habit"              // Legacy
+  | "reflection"         // Keep
+  // NEW study types:
+  | "study_session"      // Logged study time
+  | "topic_explanation"  // AI explanations
+  | "exam_prep"          // Exam-focused study
+  | "scan_solve"         // Scanned problem solutions
+  | "video_summary"      // Video summaries
+  | "mastery_milestone"  // Topic mastered
+  | "weakness_identified"// Weak topic flagged
+  | "breakthrough_moment"// Aha moments
+  | "intel";             // Daily Intel
 
 interface StoreMemoryParams {
   userId: string;
@@ -276,8 +292,107 @@ export class SemanticMemoryService {
   isEnabled(): boolean {
     return this.isAvailable;
   }
+
+  /**
+   * 🎯 Query memories related to a specific topic
+   */
+  async queryTopicMemories(params: {
+    userId: string;
+    subject: string;
+    topic: string;
+    limit?: number;
+  }): Promise<Memory[]> {
+    await this.initPromise;
+
+    if (!this.isAvailable) return [];
+
+    const query = `${params.subject} ${params.topic} explanations concepts definitions`;
+
+    try {
+      const collectionName = `${CHROMA_COLLECTION_PREFIX}_${params.userId.substring(0, 8)}`;
+      
+      const collection = await this.client!.getCollection({
+        name: collectionName,
+        embeddingFunction: this.embedder!,
+      });
+
+      const results = await collection.query({
+        queryTexts: [query],
+        nResults: params.limit || 10,
+        where: {
+          $or: [
+            { type: "topic_explanation" },
+            { type: "scan_solve" },
+            { type: "video_summary" },
+            { type: "study_session" },
+          ],
+        } as any,
+      });
+
+      return this.formatQueryResults(results);
+    } catch (err) {
+      console.warn(`⚠️ Failed to query topic memories:`, err);
+      return [];
+    }
+  }
+
+  /**
+   * 🔍 Find similar struggles/mistakes
+   */
+  async findSimilarStruggles(params: {
+    userId: string;
+    topic: string;
+    limit?: number;
+  }): Promise<Memory[]> {
+    await this.initPromise;
+
+    if (!this.isAvailable) return [];
+
+    const query = `struggling with ${params.topic} confusion mistakes errors difficulties`;
+
+    try {
+      const collectionName = `${CHROMA_COLLECTION_PREFIX}_${params.userId.substring(0, 8)}`;
+      
+      const collection = await this.client!.getCollection({
+        name: collectionName,
+        embeddingFunction: this.embedder!,
+      });
+
+      const results = await collection.query({
+        queryTexts: [query],
+        nResults: params.limit || 5,
+      });
+
+      return this.formatQueryResults(results);
+    } catch (err) {
+      console.warn(`⚠️ Failed to find similar struggles:`, err);
+      return [];
+    }
+  }
+
+  /**
+   * Helper: Format query results
+   */
+  private formatQueryResults(results: any): Memory[] {
+    const memories: Memory[] = [];
+    const documents = results.documents?.[0] || [];
+    const distances = results.distances?.[0] || [];
+    const metadatas = results.metadatas?.[0] || [];
+
+    for (let i = 0; i < documents.length; i++) {
+      const distance = distances[i] || 0;
+      const score = 1 - distance;
+
+      memories.push({
+        text: documents[i] as string,
+        score,
+        metadata: metadatas[i],
+      });
+    }
+
+    return memories;
+  }
 }
 
-// Singleton instance
 export const semanticMemory = new SemanticMemoryService();
 

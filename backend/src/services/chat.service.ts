@@ -140,36 +140,12 @@ Return ONLY valid JSON:
 
   /**
    * 🎯 Create a habit from AI suggestion
+   * DEPRECATED - study OS uses study sessions instead
    */
   async createHabitFromSuggestion(userId: string, suggestion: HabitSuggestion) {
-    const habit = await prisma.habit.create({
-      data: {
-        userId,
-        title: suggestion.title,
-        schedule: {
-          type: suggestion.type,
-          time: suggestion.time,
-          repeatDays: [0, 1, 2, 3, 4, 5, 6], // Daily by default
-        },
-        context: {
-          emoji: suggestion.emoji || "⭐",
-          importance: suggestion.importance,
-          reasoning: suggestion.reasoning,
-          source: "ai_chat",
-        },
-        streak: 0,
-      },
-    });
-
-    await prisma.event.create({
-      data: {
-        userId,
-        type: "habit_created",
-        payload: { habitId: habit.id, source: "ai_chat", suggestion },
-      },
-    });
-
-    return habit;
+    // REMOVED: habit system - not needed for study OS
+    // This method is kept for backward compatibility but does nothing
+    return null;
   }
 }
 
