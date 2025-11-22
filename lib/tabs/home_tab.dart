@@ -7,7 +7,6 @@ import '../providers/projects_provider.dart';
 import '../widgets/animated_blob.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/power_stat_card.dart';
-import '../widgets/exam_threat_card.dart';
 import '../widgets/mission_card.dart';
 import '../widgets/study_target_card.dart';
 import '../widgets/add_target_dialog.dart';
@@ -42,7 +41,7 @@ class HomeTab extends StatelessWidget {
                         const SizedBox(height: 40),
                         _buildPowerStats(context),
                         const SizedBox(height: 40),
-                        _buildThreatAssessment(context),
+                        _buildCriticalAlerts(context),
                         const SizedBox(height: 40),
                         _buildTodaysMissions(context),
                         const SizedBox(height: 40),
@@ -51,6 +50,8 @@ class HomeTab extends StatelessWidget {
                         _buildMomentumCards(context),
                         const SizedBox(height: 40),
                         _buildIntensitySlider(context),
+                        const SizedBox(height: 40),
+                        _buildDominationRoadmap(context),
                         const SizedBox(height: 100), // Space for FAB
                       ],
                     ),
@@ -211,16 +212,31 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildThreatAssessment(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final exams = appState.exams;
+  Widget _buildCriticalAlerts(BuildContext context) {
+    final alerts = [
+      {
+        'title': 'CHEMISTRY CRISIS',
+        'detail': 'Only 5 days. 38% unprepared. URGENT.',
+        'icon': '🔴',
+      },
+      {
+        'title': 'MATH WEAKNESS',
+        'detail': 'Integration concepts at 40% mastery. Attack now.',
+        'icon': '⚠️',
+      },
+      {
+        'title': 'TIME LEAK',
+        'detail': 'You\'re losing 3 hours/week to distractions. LOCK IN.',
+        'icon': '⏰',
+      },
+    ];
 
     return GlassmorphicCard(
-      padding: const EdgeInsets.all(20),
-      borderColor: const Color(0xFFDC2626).withOpacity(0.5),
+      padding: const EdgeInsets.all(24),
+      borderColor: const Color(0xFFDC2626).withOpacity(0.6),
       gradientColors: [
-        const Color(0xFFDC2626).withOpacity(0.4),
-        const Color(0xFFDC2626).withOpacity(0.2),
+        const Color(0xFFDC2626).withOpacity(0.3),
+        Colors.transparent,
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,33 +244,67 @@ class HomeTab extends StatelessWidget {
           const Row(
             children: [
               Icon(
-                LucideIcons.alertCircle,
+                LucideIcons.bomb,
                 color: Color(0xFFF87171),
-                size: 20,
+                size: 24,
               ),
-              SizedBox(width: 10),
+              SizedBox(width: 12),
               Text(
-                'THREAT ASSESSMENT',
+                'CRITICAL ALERTS',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFFF87171),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ...exams.map((exam) => Padding(
+          const SizedBox(height: 20),
+          ...alerts.map((alert) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: ExamThreatCard(
-                  subject: exam['subject'] as String,
-                  icon: exam['icon'] as String,
-                  date: exam['date'] as String,
-                  days: exam['days'] as int,
-                  threat: exam['threat'] as String,
-                  gradientColors: (exam['color'] as List).cast<String>(),
-                  progress: exam['progress'] as int,
-                  prediction: exam['prediction'] as String,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFDC2626).withOpacity(0.4),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        alert['icon'] as String,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              alert['title'] as String,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFF87171),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              alert['detail'] as String,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade400,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )),
         ],
@@ -554,6 +604,152 @@ class HomeTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDominationRoadmap(BuildContext context) {
+    final roadmap = [
+      {
+        'priority': 1,
+        'task': 'CHEMISTRY: Organic Reactions Deep Dive',
+        'time': '2h TODAY',
+        'impact': 'CRITICAL',
+        'energy': '🔥🔥🔥',
+      },
+      {
+        'priority': 2,
+        'task': 'MATH: Integration Mastery Session',
+        'time': '1.5h TODAY',
+        'impact': 'HIGH',
+        'energy': '🔥🔥',
+      },
+      {
+        'priority': 3,
+        'task': 'BIOLOGY: Photosynthesis Quiz Blitz',
+        'time': '45m TOMORROW',
+        'impact': 'MEDIUM',
+        'energy': '🔥',
+      },
+    ];
+
+    Color getImpactColor(String impact) {
+      switch (impact) {
+        case 'CRITICAL':
+          return const Color(0xFFDC2626);
+        case 'HIGH':
+          return const Color(0xFFF97316);
+        default:
+          return const Color(0xFF3B82F6);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              LucideIcons.eye,
+              color: Color(0xFF8B5CF6),
+              size: 24,
+            ),
+            SizedBox(width: 12),
+            Text(
+              'DOMINATION ROADMAP',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ...roadmap.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GlassmorphicCard(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${item['priority']}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['task'] as String,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: getImpactColor(item['impact'] as String),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  item['impact'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                item['time'] as String,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                item['energy'] as String,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )),
+      ],
     );
   }
 
