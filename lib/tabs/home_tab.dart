@@ -369,7 +369,6 @@ class HomeTab extends StatelessWidget {
   Widget _buildTodaysMissions(BuildContext context) {
     final appState = context.watch<AppState>();
     final todayPlan = appState.todayPlan;
-    final remaining = todayPlan.where((m) => !(m['done'] as bool)).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,24 +387,6 @@ class HomeTab extends StatelessWidget {
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
-              ),
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '$remaining REMAINING',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
               ),
             ),
           ],
