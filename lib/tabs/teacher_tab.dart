@@ -173,6 +173,7 @@ class TeacherTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -201,22 +202,312 @@ class TeacherTab extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                LucideIcons.shield,
-                color: Color(0xFF8B5CF6),
-                size: 48,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF8B5CF6),
+                    width: 2,
+                  ),
+                ),
+                child: const Icon(
+                  LucideIcons.brain,
+                  color: Color(0xFF8B5CF6),
+                  size: 32,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Advanced analysis of your learning patterns. I see everything.',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+          
+          const SizedBox(height: 32),
+          
+          // Generated Timestamp
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.clock,
+                  color: Colors.grey.shade400,
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Generated Today at 07:00 AM',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ],
             ),
           ),
+          
+          const SizedBox(height: 32),
+          
+          // THREAT ASSESSMENT Section
+          _buildIntelSection(
+            icon: LucideIcons.alertTriangle,
+            iconColor: const Color(0xFFDC2626),
+            title: 'THREAT ASSESSMENT',
+            content: 'Chemistry exam in 5 days. Current mastery: 62%. Predicted outcome: 72% (C grade). Biology in 12 days looking strong at 78%. Math in 17 days needs urgent attention - only 45% mastery.',
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // WEAK POINTS Section
+          _buildIntelSection(
+            icon: LucideIcons.target,
+            iconColor: const Color(0xFFF59E0B),
+            title: 'WEAK POINTS',
+            bulletPoints: [
+              'Organic Chemistry reactions - 3 sessions, score still 40%',
+              'Calculus integration - avoiding this topic for 1 week',
+              'Physics momentum - studied once, scored 35%, never revisited',
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // PREDICTIONS Section
+          _buildIntelSection(
+            icon: LucideIcons.trendingUp,
+            iconColor: const Color(0xFF8B5CF6),
+            title: 'PREDICTIONS',
+            content: 'At current rate: Chemistry 72% (C), Biology 91% (A-), Math 58% (D).\n\nIf you push Chemistry to 2h/day for next 4 days, you can hit 85% (B+). Math needs 6 hours minimum to reach passing grade.',
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // TODAY'S MISSIONS Section
+          _buildIntelSection(
+            icon: LucideIcons.listTodo,
+            iconColor: const Color(0xFF10B981),
+            title: 'TODAY\'S MISSIONS',
+            missions: [
+              {'time': '09:00', 'subject': 'Chemistry', 'task': 'Organic Reactions Mechanisms (60 min)', 'priority': 'CRITICAL'},
+              {'time': '11:00', 'subject': 'Math', 'task': 'Integration Practice Problems (45 min)', 'priority': 'HIGH'},
+              {'time': '14:00', 'subject': 'Chemistry', 'task': 'Past Paper Q1-5 (40 min)', 'priority': 'CRITICAL'},
+              {'time': '16:00', 'subject': 'Biology', 'task': 'Review Cell Division (30 min)', 'priority': 'LOW'},
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // BEHAVIORAL INSIGHTS Section
+          _buildIntelSection(
+            icon: LucideIcons.eye,
+            iconColor: const Color(0xFFEC4899),
+            title: 'BEHAVIORAL INSIGHTS',
+            content: 'You study best 9am-11am (mastery jumps 12% avg) but keep wasting it on YouTube. You say chemistry is priority but studied biology 3x more this week - exam is in 5 DAYS.',
+            isWarning: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIntelSection({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? content,
+    List<String>? bulletPoints,
+    List<Map<String, String>>? missions,
+    bool isWarning = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isWarning 
+            ? const Color(0xFFDC2626).withOpacity(0.1)
+            : Colors.black.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isWarning 
+              ? const Color(0xFFDC2626).withOpacity(0.5)
+              : Colors.white.withOpacity(0.1),
+          width: isWarning ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: iconColor,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Content
+          if (content != null)
+            Text(
+              content,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                height: 1.6,
+              ),
+            ),
+          
+          // Bullet Points
+          if (bulletPoints != null)
+            ...bulletPoints.map((point) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: iconColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      point,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          
+          // Missions
+          if (missions != null)
+            ...missions.asMap().entries.map((entry) {
+              final index = entry.key;
+              final mission = entry.value;
+              final priorityColor = mission['priority'] == 'CRITICAL'
+                  ? const Color(0xFFDC2626)
+                  : mission['priority'] == 'HIGH'
+                      ? const Color(0xFFF59E0B)
+                      : const Color(0xFF10B981);
+              
+              return Padding(
+                padding: EdgeInsets.only(bottom: index < missions.length - 1 ? 12 : 0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: priorityColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Time
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: priorityColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          mission['time']!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: priorityColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      
+                      // Task details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mission['subject']!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              mission['task']!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Priority badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: priorityColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: priorityColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          mission['priority']!,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: priorityColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );
