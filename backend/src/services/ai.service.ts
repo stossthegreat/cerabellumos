@@ -11,6 +11,8 @@ import { shortTermMemory } from "./short-term-memory.service";
 import { aiPromptService } from "./ai-os-prompts.service";
 import { redis } from "../utils/redis";
 import { MENTOR } from "../config/mentors.config";
+import { buildUserIntelState } from "./intel/buildUserIntelState";
+import { UserIntelState } from "./intel/types";
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o";
 const LLM_MAX_TOKENS = Number(process.env.LLM_MAX_TOKENS || 2000); // Much higher for GPT-4o complete responses
@@ -1113,7 +1115,52 @@ Do not use mystical metaphors — be clear and unforgivingly honest.`;
     fullText: string;
   }> {
     try {
-      const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+      // Load unified intelligence state
+      const intel = await buildUserIntelState(userId);
+      
+      // Build compact JSON context for AI
+      const intelContext = {
+        identity: {
+          archetype: intel.identity.archetype,
+          confidence: intel.identity.confidence,
+          direction: intel.identity.direction,
+          drivers: intel.identity.drivers,
+          riskTag: intel.identity.riskTag,
+        },
+        exams: intel.exams.map(e => ({
+          subject: e.subject,
+          daysRemaining: e.daysRemaining,
+          threatLevel: e.threatLevel,
+          currentProgress: e.currentProgress,
+          prediction: e.prediction,
+          gapAnalysis: e.gapAnalysis,
+        })),
+        examProximity: intel.examProximity,
+        studyPatterns: {
+          peakWindows: intel.studyPatterns.peak_study_windows,
+          driftWindows: intel.studyPatterns.drift_windows,
+          consistency: intel.studyPatterns.consistency_score,
+          procrastinationTriggers: intel.studyPatterns.procrastination_triggers,
+        },
+        mastery: {
+          weakTopics: intel.mastery.weakTopics,
+          strongTopics: intel.mastery.strongTopics,
+          stuckTopics: intel.mastery.stuckTopics,
+        },
+        semanticThreads: {
+          contradictions: intel.semanticThreads.studyContradictions,
+          excuses: intel.semanticThreads.recurringExcuses,
+          breakthroughs: intel.semanticThreads.recentBreakthroughs,
+        },
+        recentActivity: {
+          todayMinutes: intel.todayMinutes,
+          weeklyMinutes: intel.weeklyMinutes,
+          weeklyTarget: intel.weeklyTarget,
+        },
+      };
+
+      // Build prompt with unified state (convert to consciousness format for compatibility)
+      const consciousness = this.convertIntelToConsciousness(intel);
       const prompt = aiStudyPrompts.buildIntelPrompt(consciousness);
 
       const fullText = await this.generateWithConsciousnessPrompt(userId, prompt, {
@@ -1130,8 +1177,9 @@ Do not use mystical metaphors — be clear and unforgivingly honest.`;
         type: "intel" as any,
         text: fullText,
         metadata: { 
-          examCount: consciousness.exams.length,
-          weakTopics: consciousness.weakTopics.length,
+          examCount: intel.exams.length,
+          weakTopics: intel.mastery.weakTopics.length,
+          archetype: intel.identity.archetype,
         },
         importance: 5,
       });
@@ -1157,13 +1205,16 @@ Do not use mystical metaphors — be clear and unforgivingly honest.`;
    */
   async generateStudyNudge(userId: string, trigger: string): Promise<string> {
     try {
-      const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+      // Load unified intelligence state
+      const intel = await buildUserIntelState(userId);
 
       // Determine intensity based on exam proximity
       let intensity: "medium" | "high" | "nuclear" = "medium";
-      if (consciousness.examProximity === "CRITICAL") intensity = "nuclear";
-      else if (consciousness.examProximity === "HIGH") intensity = "high";
+      if (intel.examProximity === "CRITICAL") intensity = "nuclear";
+      else if (intel.examProximity === "HIGH") intensity = "high";
 
+      // Convert to consciousness format for compatibility
+      const consciousness = this.convertIntelToConsciousness(intel);
       const prompt = aiStudyPrompts.buildStudyNudgePrompt(consciousness, trigger, intensity);
 
       const text = await this.generateWithConsciousnessPrompt(userId, prompt, {
@@ -1403,6 +1454,49 @@ Respond to their question with clarity and precision. If they're asking about a 
     });
 
     return reply;
+  }
+
+  // ============================================================
+  // 🔧 Conversion Helpers
+  // ============================================================
+  
+  /**
+   * Convert UserIntelState to StudyConsciousness format for compatibility
+   */
+  private convertIntelToConsciousness(intel: UserIntelState): StudyConsciousness {
+    return {
+      identity: {
+        name: "", // Not needed for prompts
+        grade: null,
+        studyGoals: [],
+        learningStyle: null,
+        createdAt: new Date(),
+      },
+      patterns: intel.studyPatterns,
+      exams: intel.exams,
+      examProximity: intel.examProximity,
+      topicMastery: intel.mastery.topicScores,
+      weakTopics: intel.mastery.weakTopics,
+      strongTopics: intel.mastery.strongTopics,
+      stuckTopics: intel.mastery.stuckTopics,
+      recentSessions: intel.recentSessions,
+      todayMinutes: intel.todayMinutes,
+      weeklyMinutes: intel.weeklyMinutes,
+      weeklyTarget: intel.weeklyTarget,
+      semanticThreads: intel.semanticThreads,
+      phase: "architect", // Default phase
+      os_phase: {
+        current_phase: "architect",
+        started_at: new Date(),
+        days_in_phase: 0,
+        phase_transitions: [],
+      },
+      tone: "direct",
+      nextEvolution: intel.identity.targetState,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalStudyHours: 0,
+    };
   }
 
   // ============================================================
