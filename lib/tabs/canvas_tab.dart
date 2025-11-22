@@ -332,11 +332,12 @@ class _CanvasTabState extends State<CanvasTab> {
                                 ],
                               ),
                             ),
-            ],
-          ),
-      ),
-    );
-  },
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
