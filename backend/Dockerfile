@@ -19,7 +19,7 @@ RUN npx prisma generate && npm run build
 RUN npm prune --production --legacy-peer-deps
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8080
 
-# Start the scheduler worker
-CMD ["node", "dist/workers/scheduler.worker.js"]
+# Start the API server (not the worker!)
+CMD ["npm", "start"]
