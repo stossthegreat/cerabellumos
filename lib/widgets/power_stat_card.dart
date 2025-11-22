@@ -32,7 +32,7 @@ class _PowerStatCardState extends State<PowerStatCard> {
         scale: _isHovered ? 1.1 : 1.0,
         duration: const Duration(milliseconds: 200),
         child: GlassmorphicCard(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           borderColor: Colors.white.withOpacity(0.2),
           gradientColors: [
             widget.color.withOpacity(0.4),
@@ -45,26 +45,29 @@ class _PowerStatCardState extends State<PowerStatCard> {
               Icon(
                 widget.icon,
                 color: Colors.white.withOpacity(0.9),
-                size: 32,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade400,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                ),
-                textAlign: TextAlign.center,
+                size: 24,
               ),
               const SizedBox(height: 8),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
                   widget.value,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),

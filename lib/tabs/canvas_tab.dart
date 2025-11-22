@@ -16,6 +16,13 @@ class CanvasTab extends StatefulWidget {
 
 class _CanvasTabState extends State<CanvasTab> {
   bool _sidebarOpen = false;
+  final TextEditingController _inputController = TextEditingController();
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -512,6 +519,7 @@ class _CanvasTabState extends State<CanvasTab> {
             const SizedBox(width: 12),
             Expanded(
               child: TextField(
+                controller: _inputController,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -548,12 +556,32 @@ class _CanvasTabState extends State<CanvasTab> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 ),
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Sent: $value'),
+                        backgroundColor: const Color(0xFF8B5CF6),
+                      ),
+                    );
+                    _inputController.clear();
+                  }
+                },
               ),
             ),
             const SizedBox(width: 12),
             GestureDetector(
               onTap: () {
-                // TODO: Implement send
+                final text = _inputController.text.trim();
+                if (text.isNotEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Sent: $text'),
+                      backgroundColor: const Color(0xFF8B5CF6),
+                    ),
+                  );
+                  _inputController.clear();
+                }
               },
               child: Container(
                 padding: const EdgeInsets.all(12),

@@ -38,9 +38,7 @@ class StudyTab extends StatelessWidget {
                   children: [
                     _buildHeader(context),
                     const SizedBox(height: 40),
-                    _buildPowerToolsGrid(context),
-                    const SizedBox(height: 32),
-                    _buildInstantPhotoSolve(context),
+                    _buildPowerToolsList(context),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -96,125 +94,62 @@ class StudyTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPowerToolsGrid(BuildContext context) {
+  Widget _buildPowerToolsList(BuildContext context) {
     final tools = [
       {
         'name': 'AI SCANNER',
-        'desc': 'INSTANT ANSWERS',
+        'desc': 'Point your camera at any problem and get instant step-by-step solutions powered by elite AI',
         'icon': LucideIcons.scanLine,
         'colors': [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)],
         'screen': const AIScannerScreen(),
+        'emoji': '📸',
       },
       {
         'name': 'FLASHCARD TURBO',
-        'desc': 'RAPID MEMORIZE',
+        'desc': 'Swipe through smart flashcards with spaced repetition - master anything 10x faster',
         'icon': LucideIcons.layers,
         'colors': [const Color(0xFFF59E0B), const Color(0xFFD97706)],
         'screen': const FlashcardTurboScreen(),
+        'emoji': '🃏',
       },
       {
         'name': 'VIDEO MASTERY',
-        'desc': 'WATCH & ABSORB',
+        'desc': 'Upload any video and AI extracts key concepts, timestamps, and generates instant quizzes',
         'icon': LucideIcons.video,
         'colors': [const Color(0xFFEC4899), const Color(0xFFBE185D)],
         'screen': const VideoMasteryScreen(),
+        'emoji': '🎥',
       },
       {
         'name': 'DEEP DIVE',
-        'desc': 'CONCEPT UNLOCK',
+        'desc': 'Unlock any concept with interactive knowledge trees - learn everything from first principles',
         'icon': LucideIcons.lightbulb,
         'colors': [const Color(0xFF06B6D4), const Color(0xFF0284C7)],
         'screen': const DeepDiveScreen(),
+        'emoji': '💡',
       },
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: tools.length,
-      itemBuilder: (context, index) {
-        final tool = tools[index];
-        return _PowerToolCard(
-          name: tool['name'] as String,
-          description: tool['desc'] as String,
-          icon: tool['icon'] as IconData,
-          gradientColors: tool['colors'] as List<Color>,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => tool['screen'] as Widget,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildInstantPhotoSolve(BuildContext context) {
-    return GlassmorphicCard(
-      padding: const EdgeInsets.all(32),
-      borderColor: const Color(0xFF8B5CF6).withOpacity(0.5),
-      gradientColors: [
-        const Color(0xFF8B5CF6).withOpacity(0.4),
-        const Color(0xFF6D28D9).withOpacity(0.4),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                LucideIcons.camera,
-                color: Colors.white,
-                size: 32,
-              ),
-              SizedBox(width: 16),
-              Text(
-                'INSTANT PHOTO SOLVE',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'POINT & DOMINATE - Get AI solutions instantly',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 24),
-          GradientButton(
-            text: '📷 ACTIVATE CAMERA',
-            onPressed: () {
+    return Column(
+      children: tools.map((tool) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: _PowerToolCard(
+            name: tool['name'] as String,
+            description: tool['desc'] as String,
+            emoji: tool['emoji'] as String,
+            icon: tool['icon'] as IconData,
+            gradientColors: tool['colors'] as List<Color>,
+            onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const AIScannerScreen(),
+                  builder: (_) => tool['screen'] as Widget,
                 ),
               );
             },
-            gradientColors: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-            width: double.infinity,
-            height: 60,
-            borderRadius: 16,
-            shadowColor: const Color(0xFF8B5CF6),
           ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 }
@@ -222,6 +157,7 @@ class StudyTab extends StatelessWidget {
 class _PowerToolCard extends StatefulWidget {
   final String name;
   final String description;
+  final String emoji;
   final IconData icon;
   final List<Color> gradientColors;
   final VoidCallback onTap;
@@ -229,6 +165,7 @@ class _PowerToolCard extends StatefulWidget {
   const _PowerToolCard({
     required this.name,
     required this.description,
+    required this.emoji,
     required this.icon,
     required this.gradientColors,
     required this.onTap,
@@ -238,8 +175,24 @@ class _PowerToolCard extends StatefulWidget {
   State<_PowerToolCard> createState() => _PowerToolCardState();
 }
 
-class _PowerToolCardState extends State<_PowerToolCard> {
+class _PowerToolCardState extends State<_PowerToolCard> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -249,9 +202,10 @@ class _PowerToolCardState extends State<_PowerToolCard> {
       onTapUp: (_) => setState(() => _isHovered = false),
       onTapCancel: () => setState(() => _isHovered = false),
       child: AnimatedScale(
-        scale: _isHovered ? 1.05 : 1.0,
-        duration: const Duration(milliseconds: 150),
+        scale: _isHovered ? 1.02 : 1.0,
+        duration: const Duration(milliseconds: 200),
         child: Container(
+          height: 140,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             gradient: LinearGradient(
@@ -265,54 +219,115 @@ class _PowerToolCardState extends State<_PowerToolCard> {
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.gradientColors.first.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: widget.gradientColors.first.withOpacity(0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  widget.icon,
-                  color: Colors.white,
-                  size: 36,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        widget.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          fontSize: 15,
-                          letterSpacing: 0.5,
+          child: Stack(
+            children: [
+              // Shimmer effect
+              if (_isHovered)
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _shimmerController,
+                    builder: (context, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0),
+                              Colors.white.withOpacity(0.1 * _shimmerController.value),
+                              Colors.white.withOpacity(0),
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
                         ),
+                      );
+                    },
+                  ),
+                ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    // Emoji + Icon
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.emoji,
+                            style: const TextStyle(fontSize: 32),
+                          ),
+                          const SizedBox(height: 4),
+                          Icon(
+                            widget.icon,
+                            color: Colors.white.withOpacity(0.6),
+                            size: 16,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        widget.description,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    const SizedBox(width: 20),
+                    
+                    // Text Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              fontSize: 18,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.description,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
+                    ),
+                    
+                    // Arrow
+                    Icon(
+                      LucideIcons.chevronRight,
+                      color: Colors.white.withOpacity(0.6),
+                      size: 28,
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
