@@ -600,6 +600,7 @@ class _AddTargetDialogState extends State<AddTargetDialog> {
           ),
         ),
       ),
+      ),
     );
   }
 }
