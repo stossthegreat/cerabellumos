@@ -248,7 +248,7 @@ class _PowerToolCardState extends State<_PowerToolCard> {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,27 +256,33 @@ class _PowerToolCardState extends State<_PowerToolCard> {
                 Icon(
                   widget.icon,
                   color: Colors.white,
-                  size: 40,
+                  size: 36,
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        fontSize: 16,
-                        letterSpacing: 0.5,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontSize: 15,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      widget.description,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.description,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],

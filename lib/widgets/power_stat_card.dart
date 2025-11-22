@@ -32,37 +32,43 @@ class _PowerStatCardState extends State<PowerStatCard> {
         scale: _isHovered ? 1.1 : 1.0,
         duration: const Duration(milliseconds: 200),
         child: GlassmorphicCard(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           borderColor: Colors.white.withOpacity(0.2),
           gradientColors: [
             widget.color.withOpacity(0.4),
             widget.color.withOpacity(0.1),
           ],
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 widget.icon,
-                color: Colors.white.withOpacity(0.8),
-                size: 20,
+                color: Colors.white.withOpacity(0.9),
+                size: 32,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 widget.label,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   color: Colors.grey.shade400,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.5,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              Text(
-                widget.value,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  widget.value,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],

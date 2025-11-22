@@ -62,7 +62,7 @@ class HomeTab extends StatelessWidget {
           
           // FLOATING ACTION BUTTON (Bottom-Right)
           Positioned(
-            bottom: 32,
+            bottom: 100,
             right: 32,
             child: _buildFAB(context),
           ),
@@ -175,42 +175,37 @@ class HomeTab extends StatelessWidget {
     final appState = context.watch<AppState>();
     final userData = appState.userData;
 
-    return Row(
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 1.4,
       children: [
-        Expanded(
-          child: PowerStatCard(
-            label: 'IQ',
-            value: '${userData['iq']}',
-            icon: LucideIcons.brain,
-            color: const Color(0xFF8B5CF6),
-          ),
+        PowerStatCard(
+          label: 'IQ',
+          value: '${userData['iq']}',
+          icon: LucideIcons.brain,
+          color: const Color(0xFF8B5CF6),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: PowerStatCard(
-            label: 'POWER',
-            value: '${userData['studyPower']}',
-            icon: LucideIcons.zap,
-            color: const Color(0xFFDC2626),
-          ),
+        PowerStatCard(
+          label: 'POWER',
+          value: '${userData['studyPower']}',
+          icon: LucideIcons.zap,
+          color: const Color(0xFFDC2626),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: PowerStatCard(
-            label: 'MASTERY',
-            value: '${((userData['masteryRate'] as double) * 100).toInt()}%',
-            icon: LucideIcons.crown,
-            color: const Color(0xFFEC4899),
-          ),
+        PowerStatCard(
+          label: 'MASTERY',
+          value: '${((userData['masteryRate'] as double) * 100).toInt()}%',
+          icon: LucideIcons.crown,
+          color: const Color(0xFFEC4899),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: PowerStatCard(
-            label: 'STREAK',
-            value: '${userData['streak']}',
-            icon: LucideIcons.flame,
-            color: const Color(0xFFF97316),
-          ),
+        PowerStatCard(
+          label: 'STREAK',
+          value: '${userData['streak']}',
+          icon: LucideIcons.flame,
+          color: const Color(0xFFF97316),
         ),
       ],
     );
@@ -221,7 +216,7 @@ class HomeTab extends StatelessWidget {
     final exams = appState.exams;
 
     return GlassmorphicCard(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       borderColor: const Color(0xFFDC2626).withOpacity(0.5),
       gradientColors: [
         const Color(0xFFDC2626).withOpacity(0.4),
@@ -235,22 +230,22 @@ class HomeTab extends StatelessWidget {
               Icon(
                 LucideIcons.alertCircle,
                 color: Color(0xFFF87171),
-                size: 24,
+                size: 20,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 10),
               Text(
                 'THREAT ASSESSMENT',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFFF87171),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           ...exams.map((exam) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: ExamThreatCard(
                   subject: exam['subject'] as String,
                   icon: exam['icon'] as String,

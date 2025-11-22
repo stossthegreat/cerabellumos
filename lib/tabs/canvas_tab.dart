@@ -40,10 +40,6 @@ class _CanvasTabState extends State<CanvasTab> {
               onTap: () => setState(() => _sidebarOpen = false),
               child: Container(
                 color: Colors.black.withOpacity(0.7),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                  child: Container(color: Colors.transparent),
-                ),
               ),
             ),
           
@@ -180,9 +176,7 @@ class _CanvasTabState extends State<CanvasTab> {
           ),
         ),
       ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Column(
+      child: Column(
           children: [
             // Header
             Container(
@@ -338,12 +332,11 @@ class _CanvasTabState extends State<CanvasTab> {
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+            ],
+          ),
+      ),
+    );
+  },
               ),
             ),
           ],
