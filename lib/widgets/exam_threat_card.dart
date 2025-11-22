@@ -1,0 +1,215 @@
+import 'package:flutter/material.dart';
+import 'glassmorphic_card.dart';
+
+class ExamThreatCard extends StatefulWidget {
+  final String subject;
+  final String icon;
+  final String date;
+  final int days;
+  final String threat;
+  final List<String> gradientColors;
+  final int progress;
+  final String prediction;
+
+  const ExamThreatCard({
+    super.key,
+    required this.subject,
+    required this.icon,
+    required this.date,
+    required this.days,
+    required this.threat,
+    required this.gradientColors,
+    required this.progress,
+    required this.prediction,
+  });
+
+  @override
+  State<ExamThreatCard> createState() => _ExamThreatCardState();
+}
+
+class _ExamThreatCardState extends State<ExamThreatCard> {
+  bool _isHovered = false;
+
+  Color _getThreatColor() {
+    switch (widget.threat) {
+      case 'CRITICAL':
+        return const Color(0xFFDC2626);
+      case 'HIGH':
+        return const Color(0xFFF97316);
+      default:
+        return const Color(0xFF3B82F6);
+    }
+  }
+
+  List<Color> _getGradientColors() {
+    return widget.gradientColors
+        .map((hex) => Color(int.parse(hex.replaceFirst('#', '0xFF'))))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gradientColors = _getGradientColors();
+    final threatColor = _getThreatColor();
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isHovered = true),
+      onTapUp: (_) => setState(() => _isHovered = false),
+      onTapCancel: () => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.02 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: GlassmorphicCard(
+          padding: const EdgeInsets.all(20),
+          borderColor: Colors.white.withOpacity(0.2),
+          child: Row(
+            children: [
+              // Icon and Info
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      widget.icon,
+                      style: const TextStyle(fontSize: 36),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                widget.subject,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: threatColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  widget.threat,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${widget.date} • ${widget.days} DAYS LEFT',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade400,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              // Progress Section
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'PREPARATION',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade400,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          '${widget.progress}%',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: widget.progress < 50
+                                ? const Color(0xFFF87171)
+                                : widget.progress < 75
+                                    ? const Color(0xFFFB923C)
+                                    : const Color(0xFF34D399),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: widget.progress / 100,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: gradientColors,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 32),
+              // Prediction
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'PREDICTION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade400,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.prediction,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF34D399),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
