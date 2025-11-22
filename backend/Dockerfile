@@ -2,16 +2,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first (better caching)
 COPY package*.json ./
 
-# Install dependencies
-# Use --legacy-peer-deps for chromadb compatibility with openai@6
+# Install deps (prod only)
 RUN npm ci --only=production --legacy-peer-deps
 
-# Copy built application
-COPY dist/ ./dist/
-COPY prisma/ ./prisma/
+# Copy the rest of your source (including ts files)
+COPY . .
+
+# Build the app (creates /app/dist inside the container)
+RUN npm run build
 
 # Expose port
 EXPOSE 3000
