@@ -6,6 +6,7 @@ import '../providers/projects_provider.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/add_project_dialog.dart';
 import '../screens/settings_screen.dart';
+import '../services/api_service.dart';
 
 class CanvasTab extends StatefulWidget {
   const CanvasTab({super.key});
@@ -17,11 +18,87 @@ class CanvasTab extends StatefulWidget {
 class _CanvasTabState extends State<CanvasTab> {
   bool _sidebarOpen = false;
   final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final List<ChatMessage> _messages = [];
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _inputController.text.trim();
+    if (text.isEmpty) return;
+
+    final projectsProvider = context.read<ProjectsProvider>();
+    final activeProject = projectsProvider.activeProject;
+
+    if (activeProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please create a project first'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    // Add user message
+    setState(() {
+      _messages.add(ChatMessage(
+        text: text,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
+      _isLoading = true;
+    });
+    _inputController.clear();
+    _scrollToBottom();
+
+    try {
+      // Send to backend
+      final response = await ApiService.sendMessage(
+        activeProject['id'],
+        text,
+      );
+
+      // Add AI response
+      setState(() {
+        _messages.add(ChatMessage(
+          text: response['reply'] ?? 'No response',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -468,15 +545,160 @@ class _CanvasTabState extends State<CanvasTab> {
   }
 
   Widget _buildChatArea(BuildContext context) {
-    // Placeholder for future chat implementation
-    return Center(
-      child: Text(
-        'Chat interface coming soon',
-        style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
+    return Container(
+      color: Colors.black,
+      child: Column(
+        children: [
+          // Messages
+          Expanded(
+            child: _messages.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.messageSquare,
+                          color: Colors.grey.shade700,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Start a conversation',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(24),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return _buildMessage(message);
+                    },
+                  ),
+          ),
+          
+          // Loading indicator
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'AI is thinking...',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessage(ChatMessage message) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!message.isUser) ...[
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                LucideIcons.brain,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: message.isUser
+                    ? const LinearGradient(
+                        colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+                      )
+                    : null,
+                color: message.isUser ? null : Colors.grey.shade900,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: message.isUser
+                      ? const Color(0xFFDC2626).withOpacity(0.5)
+                      : Colors.white.withOpacity(0.1),
+                ),
+              ),
+              child: Text(
+                message.text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ),
+          
+          if (message.isUser) ...[
+            const SizedBox(width: 12),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                LucideIcons.user,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -556,33 +778,12 @@ class _CanvasTabState extends State<CanvasTab> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 ),
-                onSubmitted: (value) {
-                  if (value.trim().isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Sent: $value'),
-                        backgroundColor: const Color(0xFF8B5CF6),
-                      ),
-                    );
-                    _inputController.clear();
-                  }
-                },
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
             const SizedBox(width: 12),
             GestureDetector(
-              onTap: () {
-                final text = _inputController.text.trim();
-                if (text.isNotEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Sent: $text'),
-                      backgroundColor: const Color(0xFF8B5CF6),
-                    ),
-                  );
-                  _inputController.clear();
-                }
-              },
+              onTap: _sendMessage,
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -606,5 +807,17 @@ class _CanvasTabState extends State<CanvasTab> {
       ),
     );
   }
+}
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
 }
 
