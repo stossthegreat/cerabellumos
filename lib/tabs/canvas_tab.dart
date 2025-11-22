@@ -46,17 +46,7 @@ class _CanvasTabState extends State<CanvasTab> {
     final projectsProvider = context.read<ProjectsProvider>();
     final activeProject = projectsProvider.activeProject;
 
-    if (activeProject == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please create a project first'),
-          backgroundColor: Color(0xFFDC2626),
-        ),
-      );
-      return;
-    }
-
-    // Add user message
+    // Add user message immediately
     setState(() {
       _messages.add(ChatMessage(
         text: text,
@@ -69,9 +59,23 @@ class _CanvasTabState extends State<CanvasTab> {
     _scrollToBottom();
 
     try {
+      // If no project, create a default one automatically
+      String projectId;
+      if (activeProject == null) {
+        await projectsProvider.createProject(
+          name: 'General Chat',
+          emoji: '💬',
+        );
+        final newProject = projectsProvider.projects.first;
+        projectsProvider.setActiveProject(newProject.id);
+        projectId = newProject.id;
+      } else {
+        projectId = activeProject.id;
+      }
+
       // Send to backend
       final response = await ApiService.sendMessage(
-        activeProject.id,
+        projectId,
         text,
       );
 
@@ -99,6 +103,11 @@ class _CanvasTabState extends State<CanvasTab> {
         );
       }
     }
+  }
+
+  void _sendPresetMessage(String message) {
+    _inputController.text = message;
+    _sendMessage();
   }
 
   @override
@@ -503,14 +512,7 @@ class _CanvasTabState extends State<CanvasTab> {
             ].map((prompt) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Prompt: $prompt'),
-                          backgroundColor: const Color(0xFF8B5CF6),
-                        ),
-                      );
-                    },
+                    onTap: () => _sendPresetMessage(prompt),
                     child: GlassmorphicCard(
                       padding: const EdgeInsets.all(16),
                       borderColor: Colors.white.withOpacity(0.2),
