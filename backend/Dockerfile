@@ -15,8 +15,8 @@ COPY . .
 # Generate Prisma client and build TypeScript
 RUN npx prisma generate && npm run build
 
-# Remove dev dependencies to reduce image size
-RUN npm prune --production --legacy-peer-deps
+# Don't prune - we need prisma CLI for migrations at runtime
+# (Prisma client is already generated and in node_modules/@prisma/client)
 
 # Expose port
 EXPOSE 8080
