@@ -173,42 +173,96 @@ class HomeTab extends StatelessWidget {
   }
 
   Widget _buildPowerStats(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final userData = appState.userData;
+    final archiveStats = [
+      {
+        'label': 'TOTAL STUDY HOURS',
+        'value': '247h',
+        'icon': LucideIcons.clock,
+        'color': const Color(0xFF8B5CF6),
+      },
+      {
+        'label': 'PEAK STREAK',
+        'value': '28 Days',
+        'icon': LucideIcons.flame,
+        'color': const Color(0xFFF97316),
+      },
+      {
+        'label': 'SESSIONS COMPLETED',
+        'value': '186',
+        'icon': LucideIcons.checkCircle,
+        'color': const Color(0xFF10B981),
+      },
+      {
+        'label': 'CONCEPTS MASTERED',
+        'value': '142',
+        'icon': LucideIcons.brain,
+        'color': const Color(0xFF06B6D4),
+      },
+    ];
 
-    return GridView.count(
-      crossAxisCount: 2,
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
-      children: [
-        PowerStatCard(
-          label: 'IQ',
-          value: '${userData['iq']}',
-          icon: LucideIcons.brain,
-          color: const Color(0xFF8B5CF6),
-        ),
-        PowerStatCard(
-          label: 'POWER',
-          value: '${userData['studyPower']}',
-          icon: LucideIcons.zap,
-          color: const Color(0xFFDC2626),
-        ),
-        PowerStatCard(
-          label: 'MASTERY',
-          value: '${((userData['masteryRate'] as double) * 100).toInt()}%',
-          icon: LucideIcons.crown,
-          color: const Color(0xFFEC4899),
-        ),
-        PowerStatCard(
-          label: 'STREAK',
-          value: '${userData['streak']}',
-          icon: LucideIcons.flame,
-          color: const Color(0xFFF97316),
-        ),
-      ],
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.3,
+      ),
+      itemCount: archiveStats.length,
+      itemBuilder: (context, index) {
+        final stat = archiveStats[index];
+        return GlassmorphicCard(
+          padding: const EdgeInsets.all(16),
+          gradientColors: [
+            (stat['color'] as Color).withOpacity(0.2),
+            (stat['color'] as Color).withOpacity(0.05),
+          ],
+          borderColor: (stat['color'] as Color).withOpacity(0.3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                stat['icon'] as IconData,
+                color: stat['color'] as Color,
+                size: 28,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      stat['label'] as String,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.grey.shade400,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      stat['value'] as String,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

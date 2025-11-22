@@ -919,7 +919,7 @@ class TeacherTab extends StatelessWidget {
           itemBuilder: (context, index) {
             final stat = archiveStats[index];
             return GlassmorphicCard(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               gradientColors: [
                 (stat['color'] as Color).withOpacity(0.2),
                 (stat['color'] as Color).withOpacity(0.05),
@@ -932,27 +932,32 @@ class TeacherTab extends StatelessWidget {
                   Icon(
                     stat['icon'] as IconData,
                     color: stat['color'] as Color,
-                    size: 32,
+                    size: 28,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        stat['label'] as String,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade400,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          stat['label'] as String,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey.shade400,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
                       FittedBox(
                         fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           stat['value'] as String,
                           style: const TextStyle(
-                            fontSize: 28,
+                            fontSize: 24,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                           ),
