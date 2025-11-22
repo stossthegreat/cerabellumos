@@ -71,7 +71,7 @@ class _CanvasTabState extends State<CanvasTab> {
     try {
       // Send to backend
       final response = await ApiService.sendMessage(
-        activeProject['id'],
+        activeProject.id,
         text,
       );
 
