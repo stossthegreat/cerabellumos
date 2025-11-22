@@ -19,8 +19,21 @@ class _CanvasTabState extends State<CanvasTab> {
   bool _sidebarOpen = false;
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
+  
+  // Store messages per project ID
+  final Map<String, List<ChatMessage>> _projectMessages = {};
   bool _isLoading = false;
+  
+  // Get messages for current project
+  List<ChatMessage> get _messages {
+    final projectsProvider = context.read<ProjectsProvider>();
+    final activeProject = projectsProvider.activeProject;
+    if (activeProject == null) return [];
+    
+    // Initialize project messages if not exists
+    _projectMessages[activeProject.id] ??= [];
+    return _projectMessages[activeProject.id]!;
+  }
 
   @override
   void dispose() {
@@ -46,9 +59,27 @@ class _CanvasTabState extends State<CanvasTab> {
     final projectsProvider = context.read<ProjectsProvider>();
     final activeProject = projectsProvider.activeProject;
 
-    // Add user message immediately
+    // Determine project ID
+    String projectId;
+    if (activeProject == null) {
+      // Create default project
+      await projectsProvider.createProject(
+        name: 'General Chat',
+        emoji: '💬',
+      );
+      final newProject = projectsProvider.projects.first;
+      projectsProvider.setActiveProject(newProject.id);
+      projectId = newProject.id;
+    } else {
+      projectId = activeProject.id;
+    }
+
+    // Initialize project messages if needed
+    _projectMessages[projectId] ??= [];
+
+    // Add user message to THIS project's chat
     setState(() {
-      _messages.add(ChatMessage(
+      _projectMessages[projectId]!.add(ChatMessage(
         text: text,
         isUser: true,
         timestamp: DateTime.now(),
@@ -59,29 +90,15 @@ class _CanvasTabState extends State<CanvasTab> {
     _scrollToBottom();
 
     try {
-      // If no project, create a default one automatically
-      String projectId;
-      if (activeProject == null) {
-        await projectsProvider.createProject(
-          name: 'General Chat',
-          emoji: '💬',
-        );
-        final newProject = projectsProvider.projects.first;
-        projectsProvider.setActiveProject(newProject.id);
-        projectId = newProject.id;
-      } else {
-        projectId = activeProject.id;
-      }
-
       // Send to backend
       final response = await ApiService.sendMessage(
         projectId,
         text,
       );
 
-      // Add AI response
+      // Add AI response to THIS project's chat
       setState(() {
-        _messages.add(ChatMessage(
+        _projectMessages[projectId]!.add(ChatMessage(
           text: response['reply'] ?? 'No response',
           isUser: false,
           timestamp: DateTime.now(),
