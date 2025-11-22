@@ -24,10 +24,14 @@ class ApiService {
     final token = await _getToken();
     final userId = await _getUserId();
     
+    // For dev/testing: Always send x-user-id header
+    // Backend will use this if no Firebase token is present
+    final effectiveUserId = userId ?? 'test-user-123';
+    
     return {
       'Content-Type': 'application/json',
+      'x-user-id': effectiveUserId, // Dev mode auth
       if (token != null) 'Authorization': 'Bearer $token',
-      if (userId != null) 'x-user-id': userId,
     };
   }
 
@@ -43,11 +47,15 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/projects/$projectId/message'),
       headers: headers,
-      body: jsonEncode({'message': message}),
+      body: jsonEncode({'content': message}), // Backend expects 'content' not 'message'
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      // Backend returns { ok: true, aiMessage: { content: "..." } }
+      return {
+        'reply': data['aiMessage']?['content'] ?? 'No response',
+      };
     } else {
       throw Exception('Failed to send message: ${response.body}');
     }

@@ -24,13 +24,32 @@ export async function authMiddleware(
   reply: FastifyReply
 ): Promise<void> {
   try {
+    // 🔧 DEV MODE: Accept x-user-id header for testing
+    const testUserId = request.headers['x-user-id'] as string;
+    if (testUserId) {
+      request.user = {
+        id: testUserId,
+        email: `${testUserId}@test.com`,
+        name: 'Test User',
+      };
+      
+      // Ensure user exists in database
+      await ensureUserExists(testUserId, `${testUserId}@test.com`);
+      
+      console.log(`🔧 DEV MODE: Using test user ${testUserId}`);
+      
+      // Also set userId for controllers expecting it
+      (request as any).userId = testUserId;
+      return;
+    }
+    
     // Extract token from Authorization header
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       reply.code(401).send({
         error: 'Unauthorized',
-        message: 'Missing or invalid Authorization header. Expected: Bearer <token>',
+        message: 'Missing or invalid Authorization header. Expected: Bearer <token> OR x-user-id header for dev',
       });
       return;
     }
@@ -57,6 +76,9 @@ export async function authMiddleware(
 
     // Ensure user exists in database
     await ensureUserExists(request.user.id, request.user.email);
+
+    // Also set userId for controllers expecting it
+    (request as any).userId = request.user.id;
 
     // Log authenticated request
     console.log(`✅ Authenticated request from user: ${request.user.id} (${request.user.email})`);
