@@ -191,9 +191,11 @@ class StudyTab extends StatelessWidget {
             'POINT & DOMINATE - Get AI solutions instantly',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 24),
           GradientButton(

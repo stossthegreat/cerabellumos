@@ -18,6 +18,7 @@ class _AddTargetDialogState extends State<AddTargetDialog> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   
+  String _targetType = 'target'; // 'today' or 'target'
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 30));
   String _selectedEmoji = '🎯';
@@ -72,21 +73,31 @@ class _AddTargetDialogState extends State<AddTargetDialog> {
 
   void _createTarget() {
     if (_formKey.currentState!.validate()) {
-      if (_endDate.isBefore(_startDate) || _endDate.isAtSameMomentAs(_startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('End date must be after start date'),
-            backgroundColor: Color(0xFFDC2626),
-          ),
-        );
-        return;
+      final DateTime startDate;
+      final DateTime endDate;
+      
+      if (_targetType == 'today') {
+        startDate = DateTime.now();
+        endDate = DateTime.now();
+      } else {
+        if (_endDate.isBefore(_startDate) || _endDate.isAtSameMomentAs(_startDate)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('End date must be after start date'),
+              backgroundColor: Color(0xFFDC2626),
+            ),
+          );
+          return;
+        }
+        startDate = _startDate;
+        endDate = _endDate;
       }
 
       context.read<StudyTargetsProvider>().createTarget(
             title: _titleController.text,
             description: _descriptionController.text,
-            startDate: _startDate,
-            endDate: _endDate,
+            startDate: startDate,
+            endDate: endDate,
             emoji: _selectedEmoji,
           );
 
@@ -187,6 +198,104 @@ class _AddTargetDialogState extends State<AddTargetDialog> {
                         );
                       },
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Target Type Selection
+                  Text(
+                    'TARGET TYPE',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.grey.shade400,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _targetType = 'today'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: _targetType == 'today'
+                                  ? const Color(0xFFF59E0B).withOpacity(0.3)
+                                  : Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _targetType == 'today'
+                                    ? const Color(0xFFF59E0B)
+                                    : Colors.white.withOpacity(0.2),
+                                width: _targetType == 'today' ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  '⚡',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'TODAY',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: _targetType == 'today'
+                                        ? const Color(0xFFF59E0B)
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _targetType = 'target'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: _targetType == 'target'
+                                  ? const Color(0xFF8B5CF6).withOpacity(0.3)
+                                  : Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _targetType == 'target'
+                                    ? const Color(0xFF8B5CF6)
+                                    : Colors.white.withOpacity(0.2),
+                                width: _targetType == 'target' ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  '🎯',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'TARGET',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: _targetType == 'target'
+                                        ? const Color(0xFF8B5CF6)
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   
@@ -295,108 +404,150 @@ class _AddTargetDialogState extends State<AddTargetDialog> {
                   ),
                   const SizedBox(height: 20),
                   
-                  // Date Range
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'START DATE',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.grey.shade400,
-                                letterSpacing: 1,
+                  // Date Range (only show if target type is 'target')
+                  if (_targetType == 'target')
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'START',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.grey.shade400,
+                                  letterSpacing: 1,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: () => _selectDate(context, true),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.2),
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: () => _selectDate(context, true),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today,
+                                        color: Color(0xFF8B5CF6),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            DateFormat('MMM dd').format(_startDate),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      color: Color(0xFF8B5CF6),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      DateFormat('MMM dd, yyyy').format(_startDate),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'END',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.grey.shade400,
+                                  letterSpacing: 1,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'END DATE',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.grey.shade400,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: () => _selectDate(context, false),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.2),
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: () => _selectDate(context, false),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today,
+                                        color: Color(0xFFDC2626),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            DateFormat('MMM dd').format(_endDate),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      color: Color(0xFFDC2626),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      DateFormat('MMM dd, yyyy').format(_endDate),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (_targetType == 'today')
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFF59E0B).withOpacity(0.4),
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.today,
+                            color: Color(0xFFF59E0B),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Due: ${DateFormat('MMM dd, yyyy').format(DateTime.now())}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 32),
                   
                   // Buttons

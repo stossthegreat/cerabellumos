@@ -358,12 +358,13 @@ class _CanvasTabState extends State<CanvasTab> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 100),
             Container(
               width: 100,
               height: 100,
@@ -419,7 +420,12 @@ class _CanvasTabState extends State<CanvasTab> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: GestureDetector(
                     onTap: () {
-                      // TODO: Set input value
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Prompt: $prompt'),
+                          backgroundColor: const Color(0xFF8B5CF6),
+                        ),
+                      );
                     },
                     child: GlassmorphicCard(
                       padding: const EdgeInsets.all(16),
@@ -447,6 +453,7 @@ class _CanvasTabState extends State<CanvasTab> {
                     ),
                   ),
                 )),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -482,59 +489,88 @@ class _CanvasTabState extends State<CanvasTab> {
         top: false,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                ),
-              ),
-              child: Icon(
-                LucideIcons.camera,
-                color: Colors.grey.shade400,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
+            GestureDetector(
+              onTap: () {
+                // TODO: Implement camera
+              },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: Colors.white.withOpacity(0.2),
                   ),
                 ),
-                child: Text(
-                  'DROP YOUR QUESTIONS HERE...',
-                  style: TextStyle(
+                child: Icon(
+                  LucideIcons.camera,
+                  color: Colors.grey.shade400,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'DROP YOUR QUESTIONS HERE...',
+                  hintStyle: TextStyle(
                     color: Colors.grey.shade500,
                     fontWeight: FontWeight.w900,
                     fontSize: 12,
                     letterSpacing: 0.5,
                   ),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF8B5CF6),
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+            GestureDetector(
+              onTap: () {
+                // TODO: Implement send
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFDC2626).withOpacity(0.5),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFDC2626).withOpacity(0.5),
+                child: const Icon(
+                  LucideIcons.send,
+                  color: Colors.white,
+                  size: 20,
                 ),
-              ),
-              child: const Icon(
-                LucideIcons.send,
-                color: Colors.white,
-                size: 20,
               ),
             ),
           ],

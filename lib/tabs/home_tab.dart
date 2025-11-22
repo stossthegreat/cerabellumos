@@ -63,7 +63,7 @@ class HomeTab extends StatelessWidget {
           
           // FLOATING ACTION BUTTON (Bottom-Right)
           Positioned(
-            bottom: 100,
+            bottom: 120,
             right: 32,
             child: _buildFAB(context),
           ),
@@ -182,7 +182,7 @@ class HomeTab extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.2,
       children: [
         PowerStatCard(
           label: 'IQ',
