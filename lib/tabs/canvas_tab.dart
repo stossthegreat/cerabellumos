@@ -56,22 +56,43 @@ class _CanvasTabState extends State<CanvasTab> {
     final text = _inputController.text.trim();
     if (text.isEmpty) return;
 
+    print('🔵 [NEURAL] Sending message: ${text.substring(0, text.length > 50 ? 50 : text.length)}...');
+
     final projectsProvider = context.read<ProjectsProvider>();
     final activeProject = projectsProvider.activeProject;
 
     // Determine project ID
     String projectId;
-    if (activeProject == null) {
-      // Create default project
-      await projectsProvider.createProject(
-        name: 'General Chat',
-        emoji: '💬',
-      );
-      final newProject = projectsProvider.projects.first;
-      projectsProvider.setActiveProject(newProject.id);
-      projectId = newProject.id;
-    } else {
-      projectId = activeProject.id;
+    try {
+      if (activeProject == null) {
+        print('🔵 [NEURAL] No active project, creating "General Chat"...');
+        // Create default project
+        await projectsProvider.createProject(
+          name: 'General Chat',
+          emoji: '💬',
+        );
+        print('🔵 [NEURAL] Project created');
+        final newProject = projectsProvider.projects.first;
+        projectsProvider.setActiveProject(newProject.id);
+        projectId = newProject.id;
+        print('🔵 [NEURAL] Project ID: $projectId');
+      } else {
+        projectId = activeProject.id;
+        print('🔵 [NEURAL] Using existing project ID: $projectId');
+      }
+    } catch (e, stackTrace) {
+      print('❌ [NEURAL] Failed to create/get project: $e');
+      print('❌ [NEURAL] Stack: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create chat: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
     }
 
     // Initialize project messages if needed
@@ -90,11 +111,13 @@ class _CanvasTabState extends State<CanvasTab> {
     _scrollToBottom();
 
     try {
+      print('🔵 [NEURAL] Calling ApiService.sendMessage...');
       // Send to backend
       final response = await ApiService.sendMessage(
         projectId,
         text,
       );
+      print('🔵 [NEURAL] Got response: ${response['reply']?.substring(0, 50)}...');
 
       // Add AI response to THIS project's chat
       setState(() {
@@ -106,7 +129,10 @@ class _CanvasTabState extends State<CanvasTab> {
         _isLoading = false;
       });
       _scrollToBottom();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [NEURAL] sendMessage failed: $e');
+      print('❌ [NEURAL] Stack: $stackTrace');
+      
       setState(() {
         _isLoading = false;
       });
@@ -116,6 +142,7 @@ class _CanvasTabState extends State<CanvasTab> {
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: const Color(0xFFDC2626),
+            duration: const Duration(seconds: 5),
           ),
         );
       }

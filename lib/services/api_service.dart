@@ -43,12 +43,21 @@ class ApiService {
     String projectId,
     String message,
   ) async {
+    print('📡 [API] sendMessage called');
+    print('📡 [API] URL: $baseUrl/projects/$projectId/message');
+    print('📡 [API] Message: ${message.substring(0, message.length > 50 ? 50 : message.length)}...');
+    
     final headers = await _getHeaders();
+    print('📡 [API] Headers: $headers');
+    
     final response = await http.post(
       Uri.parse('$baseUrl/projects/$projectId/message'),
       headers: headers,
       body: jsonEncode({'content': message}), // Backend expects 'content' not 'message'
     );
+
+    print('📡 [API] Response status: ${response.statusCode}');
+    print('📡 [API] Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -80,18 +89,34 @@ class ApiService {
     String name,
     String emoji,
   ) async {
+    print('📡 [API] createProject called');
+    print('📡 [API] URL: $baseUrl/projects');
+    print('📡 [API] Name: $name, Emoji: $emoji');
+    
     final headers = await _getHeaders();
-    final response = await http.post(
-      Uri.parse('$baseUrl/projects'),
-      headers: headers,
-      body: jsonEncode({'name': name, 'emoji': emoji}),
-    );
+    print('📡 [API] Headers: $headers');
+    
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/projects'),
+        headers: headers,
+        body: jsonEncode({'name': name, 'emoji': emoji}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['project'];
-    } else {
-      throw Exception('Failed to create project');
+      print('📡 [API] Response status: ${response.statusCode}');
+      print('📡 [API] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('📡 [API] Project created: ${data['project']['id']}');
+        return data['project'];
+      } else {
+        throw Exception('Failed to create project: Status ${response.statusCode}, Body: ${response.body}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ [API] createProject exception: $e');
+      print('❌ [API] Stack: $stackTrace');
+      rethrow;
     }
   }
 
