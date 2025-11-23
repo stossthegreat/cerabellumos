@@ -165,82 +165,81 @@ class TeacherTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          
-          // Timestamp
-          Row(
-            children: [
-              Icon(
-                LucideIcons.clock,
-                color: DesignTokens.textTertiary,
-                size: 14,
+              // Timestamp
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.clock,
+                    color: DesignTokens.textTertiary,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Generated Today at 07:00 AM',
+                    style: DesignTokens.labelSmall,
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Generated Today at 07:00 AM',
-                style: DesignTokens.labelSmall,
+              
+              const SizedBox(height: DesignTokens.space24),
+              
+              // Threat Assessment
+              _buildIntelSection(
+                icon: LucideIcons.alertTriangle,
+                iconColor: DesignTokens.error,
+                title: 'Threat Assessment',
+                content: 'Chemistry exam in 5 days. Current mastery: 62%. Predicted outcome: 72% (C grade). Biology in 12 days looking strong at 78%. Math in 17 days needs urgent attention - only 45% mastery.',
               ),
-            ],
-          ),
-          
-          const SizedBox(height: DesignTokens.space24),
-          
-          // Threat Assessment
-          _buildIntelSection(
-            icon: LucideIcons.alertTriangle,
-            iconColor: DesignTokens.error,
-            title: 'Threat Assessment',
-            content: 'Chemistry exam in 5 days. Current mastery: 62%. Predicted outcome: 72% (C grade). Biology in 12 days looking strong at 78%. Math in 17 days needs urgent attention - only 45% mastery.',
-          ),
-          
-          const SizedBox(height: DesignTokens.space20),
-          
-          // Weak Points
-          _buildIntelSection(
-            icon: LucideIcons.target,
-            iconColor: DesignTokens.warning,
-            title: 'Weak Points',
-            bulletPoints: [
-              'Organic Chemistry reactions - 3 sessions, score still 40%',
-              'Calculus integration - avoiding this topic for 1 week',
-              'Physics momentum - studied once, scored 35%, never revisited',
-            ],
-          ),
-          
-          const SizedBox(height: DesignTokens.space20),
-          
-          // Predictions
-          _buildIntelSection(
-            icon: LucideIcons.trendingUp,
-            iconColor: DesignTokens.primary,
-            title: 'Predictions',
-            content: 'At current rate: Chemistry 72% (C), Biology 91% (A-), Math 58% (D).\n\nIf you push Chemistry to 2h/day for next 4 days, you can hit 85% (B+). Math needs 6 hours minimum to reach passing grade.',
-          ),
-          
-          const SizedBox(height: DesignTokens.space20),
-          
-          // Today's Missions
-          _buildIntelSection(
-            icon: LucideIcons.listTodo,
-            iconColor: DesignTokens.success,
-            title: "Today's Missions",
-            missions: [
-              {'time': '09:00', 'subject': 'Chemistry', 'task': 'Organic Reactions Mechanisms (60 min)', 'priority': 'CRITICAL'},
-              {'time': '11:00', 'subject': 'Math', 'task': 'Integration Practice Problems (45 min)', 'priority': 'HIGH'},
-              {'time': '14:00', 'subject': 'Chemistry', 'task': 'Past Paper Q1-5 (40 min)', 'priority': 'CRITICAL'},
-              {'time': '16:00', 'subject': 'Biology', 'task': 'Review Cell Division (30 min)', 'priority': 'LOW'},
-            ],
-          ),
-          
-          const SizedBox(height: DesignTokens.space20),
-          
-          // Behavioral Insights
-          _buildIntelSection(
-            icon: LucideIcons.eye,
-            iconColor: DesignTokens.info,
-            title: 'Behavioral Insights',
-            content: 'You study best 9am-11am (mastery jumps 12% avg) but keep wasting it on YouTube. You say chemistry is priority but studied biology 3x more this week - exam is in 5 DAYS.',
-            isWarning: true,
-          ),
+              
+              const SizedBox(height: DesignTokens.space20),
+              
+              // Weak Points
+              _buildIntelSection(
+                icon: LucideIcons.target,
+                iconColor: DesignTokens.warning,
+                title: 'Weak Points',
+                bulletPoints: [
+                  'Organic Chemistry reactions - 3 sessions, score still 40%',
+                  'Calculus integration - avoiding this topic for 1 week',
+                  'Physics momentum - studied once, scored 35%, never revisited',
+                ],
+              ),
+              
+              const SizedBox(height: DesignTokens.space20),
+              
+              // Predictions
+              _buildIntelSection(
+                icon: LucideIcons.trendingUp,
+                iconColor: DesignTokens.primary,
+                title: 'Predictions',
+                content: 'At current rate: Chemistry 72% (C), Biology 91% (A-), Math 58% (D).\n\nIf you push Chemistry to 2h/day for next 4 days, you can hit 85% (B+). Math needs 6 hours minimum to reach passing grade.',
+              ),
+              
+              const SizedBox(height: DesignTokens.space20),
+              
+              // Today's Missions
+              _buildIntelSection(
+                icon: LucideIcons.listTodo,
+                iconColor: DesignTokens.success,
+                title: "Today's Missions",
+                missions: [
+                  {'time': '09:00', 'subject': 'Chemistry', 'task': 'Organic Reactions Mechanisms (60 min)', 'priority': 'CRITICAL'},
+                  {'time': '11:00', 'subject': 'Math', 'task': 'Integration Practice Problems (45 min)', 'priority': 'HIGH'},
+                  {'time': '14:00', 'subject': 'Chemistry', 'task': 'Past Paper Q1-5 (40 min)', 'priority': 'CRITICAL'},
+                  {'time': '16:00', 'subject': 'Biology', 'task': 'Review Cell Division (30 min)', 'priority': 'LOW'},
+                ],
+              ),
+              
+              const SizedBox(height: DesignTokens.space20),
+              
+              // Behavioral Insights
+              _buildIntelSection(
+                icon: LucideIcons.eye,
+                iconColor: DesignTokens.info,
+                title: 'Behavioral Insights',
+                content: 'You study best 9am-11am (mastery jumps 12% avg) but keep wasting it on YouTube. You say chemistry is priority but studied biology 3x more this week - exam is in 5 DAYS.',
+                isWarning: true,
+              ),
             ],
           ),
         ),
