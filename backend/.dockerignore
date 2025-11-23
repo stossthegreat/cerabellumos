@@ -1,0 +1,14 @@
+# Don't copy .env into Docker image
+# Railway will provide environment variables
+.env
+.env.*
+
+# Don't copy these either
+node_modules
+dist
+.git
+.gitignore
+*.md
+.vscode
+.idea
+
