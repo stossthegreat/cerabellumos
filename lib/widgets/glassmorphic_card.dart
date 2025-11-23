@@ -8,6 +8,7 @@ class GlassmorphicCard extends StatelessWidget {
   final double? borderRadius;
   final Color? borderColor;
   final Color? backgroundColor;
+  final List<Color>? gradientColors; // DEPRECATED - kept for backwards compatibility
   final VoidCallback? onTap;
   final double blur;
   final bool elevated;
@@ -19,6 +20,7 @@ class GlassmorphicCard extends StatelessWidget {
     this.borderRadius,
     this.borderColor,
     this.backgroundColor,
+    this.gradientColors, // DEPRECATED - use backgroundColor instead
     this.onTap,
     this.blur = 10,
     this.elevated = false,
