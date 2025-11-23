@@ -1379,11 +1379,22 @@ Be clear, educational, and focused on what the student needs to remember.`,
     userMessage: string,
     conversationHistory: any[]
   ): Promise<string> {
+    console.log(`🤖 [AI SERVICE] generateProjectReply called for user ${userId}`);
+    console.log(`🤖 [AI SERVICE] Message: ${userMessage.substring(0, 100)}...`);
+    
     const openai = getOpenAIClient();
-    if (!openai) throw new Error("AI not available");
+    if (!openai) {
+      console.error("❌ [AI SERVICE] OpenAI client not available");
+      throw new Error("AI not available");
+    }
+
+    console.log(`✅ [AI SERVICE] OpenAI client ready`);
+    console.log(`🧠 [AI SERVICE] Building study consciousness...`);
 
     // Build consciousness for context
     const consciousness = await studyIntelligence.buildStudyConsciousness(userId);
+    console.log(`✅ [AI SERVICE] Consciousness built`);
+
 
     // Build context from consciousness
     const contextLines: string[] = [];
@@ -1437,22 +1448,33 @@ Respond to their question with clarity and precision. If they're asking about a 
       content: userMessage,
     });
 
+    console.log(`📞 [AI SERVICE] Calling OpenAI with model ${OPENAI_MODEL}...`);
+    
     const completion = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       max_completion_tokens: 1500,
       messages,
     });
 
+    console.log(`✅ [AI SERVICE] OpenAI response received`);
+
     const reply = completion.choices[0]?.message?.content || "I'm here to help you dominate your studies. What do you need?";
 
+    console.log(`✅ [AI SERVICE] Reply: ${reply.substring(0, 100)}...`);
+
     // Store in semantic memory
-    await semanticMemory.storeMemory({
-      userId,
-      type: "chat" as any,
-      text: `User: ${userMessage}\nAI: ${reply}`,
-      metadata: { source: "neural_tab" },
-      importance: 2,
-    });
+    try {
+      await semanticMemory.storeMemory({
+        userId,
+        type: "chat" as any,
+        text: `User: ${userMessage}\nAI: ${reply}`,
+        metadata: { source: "neural_tab" },
+        importance: 2,
+      });
+      console.log(`✅ [AI SERVICE] Stored in semantic memory`);
+    } catch (memErr) {
+      console.warn(`⚠️ [AI SERVICE] Failed to store in semantic memory (non-critical):`, memErr);
+    }
 
     return reply;
   }

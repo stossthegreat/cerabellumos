@@ -112,63 +112,92 @@ export async function projectsController(fastify: FastifyInstance) {
   /**
    * POST /projects/:id/message - Send message and get AI reply
    */
-  fastify.post("/projects/:id/message", async (req: any) => {
-    const userId = req.userId;
-    const { id } = req.params;
-    const { content } = req.body;
+  fastify.post("/projects/:id/message", async (req: any, reply: any) => {
+    try {
+      console.log(`📨 [PROJECTS] Received message for project ${req.params.id}`);
+      console.log(`📨 [PROJECTS] User ID: ${req.userId}`);
+      console.log(`📨 [PROJECTS] Content: ${req.body.content?.substring(0, 50)}...`);
+      
+      const userId = req.userId;
+      const { id } = req.params;
+      const { content } = req.body;
 
-    if (!content) {
-      return { error: "content required" };
+      if (!content) {
+        console.error("❌ [PROJECTS] No content provided");
+        return reply.code(400).send({ error: "content required" });
+      }
+
+      // Verify ownership
+      const project = await prisma.project.findUnique({
+        where: { id, userId },
+      });
+
+      if (!project) {
+        console.error(`❌ [PROJECTS] Project ${id} not found for user ${userId}`);
+        return reply.code(404).send({ error: "Project not found" });
+      }
+
+      console.log(`✅ [PROJECTS] Project found: ${project.name}`);
+
+      // Save user message
+      const userMsg = await prisma.message.create({
+        data: {
+          projectId: id,
+          role: "user",
+          content,
+        },
+      });
+
+      console.log(`✅ [PROJECTS] User message saved`);
+
+      // Get conversation history
+      const history = await prisma.message.findMany({
+        where: { projectId: id },
+        orderBy: { createdAt: "asc" },
+        take: 20, // last 20 messages for context
+      });
+
+      console.log(`✅ [PROJECTS] Loaded ${history.length} messages from history`);
+      console.log(`🤖 [PROJECTS] Calling AI service...`);
+
+      // Generate AI response (using study consciousness)
+      const aiResponse = await aiService.generateProjectReply(userId, content, history);
+
+      console.log(`✅ [PROJECTS] AI response received: ${aiResponse.substring(0, 50)}...`);
+
+      // Save AI message
+      const assistantMsg = await prisma.message.create({
+        data: {
+          projectId: id,
+          role: "assistant",
+          content: aiResponse,
+        },
+      });
+
+      console.log(`✅ [PROJECTS] AI message saved`);
+
+      // Update project lastActive
+      await prisma.project.update({
+        where: { id },
+        data: { lastActive: new Date() },
+      });
+
+      console.log(`✅ [PROJECTS] Message flow complete`);
+
+      return {
+        ok: true,
+        userMessage: userMsg,
+        aiMessage: assistantMsg,
+      };
+    } catch (error: any) {
+      console.error("❌ [PROJECTS] Error in message endpoint:", error);
+      console.error("❌ [PROJECTS] Stack:", error.stack);
+      return reply.code(500).send({ 
+        error: "Internal server error", 
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
-
-    // Verify ownership
-    const project = await prisma.project.findUnique({
-      where: { id, userId },
-    });
-
-    if (!project) {
-      return { error: "Project not found" };
-    }
-
-    // Save user message
-    const userMsg = await prisma.message.create({
-      data: {
-        projectId: id,
-        role: "user",
-        content,
-      },
-    });
-
-    // Get conversation history
-    const history = await prisma.message.findMany({
-      where: { projectId: id },
-      orderBy: { createdAt: "asc" },
-      take: 20, // last 20 messages for context
-    });
-
-    // Generate AI response (using study consciousness)
-    const aiResponse = await aiService.generateProjectReply(userId, content, history);
-
-    // Save AI message
-    const assistantMsg = await prisma.message.create({
-      data: {
-        projectId: id,
-        role: "assistant",
-        content: aiResponse,
-      },
-    });
-
-    // Update project lastActive
-    await prisma.project.update({
-      where: { id },
-      data: { lastActive: new Date() },
-    });
-
-    return {
-      ok: true,
-      userMessage: userMsg,
-      aiMessage: assistantMsg,
-    };
   });
 
   /**
