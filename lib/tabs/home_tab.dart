@@ -65,66 +65,63 @@ class HomeTab extends StatelessWidget {
     final appState = context.watch<AppState>();
     final userData = appState.userData;
     final now = DateTime.now();
-    final dateStr = DateFormat('EEEE, MMM d').format(now);
+    final timeStr = DateFormat('HH:mm').format(now);
+    final dateStr = DateFormat('EEE, MMM d').format(now).toUpperCase();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Mission Control',
-                    style: DesignTokens.displayLarge,
-                  ),
-                  const SizedBox(height: DesignTokens.space4),
-                  Text(
-                    dateStr,
-                    style: DesignTokens.labelMedium,
-                  ),
-                ],
-              ),
-            ),
-            // Streak badge + settings
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DesignTokens.space16,
-                    vertical: DesignTokens.space8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.primary.withOpacity(0.15),
-                    borderRadius: DesignTokens.borderRadiusSmall,
-                    border: Border.all(
-                      color: DesignTokens.primary.withOpacity(0.4),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        LucideIcons.flame,
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.space20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            DesignTokens.primary.withOpacity(0.12),
+            DesignTokens.primary.withOpacity(0.04),
+          ],
+        ),
+        borderRadius: DesignTokens.borderRadiusMedium,
+        border: Border.all(
+          color: DesignTokens.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top row: title + settings
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MISSION CONTROL',
+                      style: DesignTokens.labelLarge.copyWith(
                         color: DesignTokens.primary,
-                        size: 18,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(width: DesignTokens.space8),
-                      Text(
-                        '${userData['streak']} day streak',
-                        style: DesignTokens.labelMedium.copyWith(
-                          color: DesignTokens.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(height: DesignTokens.space4),
+                    Text(
+                      'Command Dashboard',
+                      style: DesignTokens.displayLarge.copyWith(
+                        fontSize: 28,
+                        height: 1.1,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: DesignTokens.space12),
-                IconButton(
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: DesignTokens.backgroundPrimary.withOpacity(0.6),
+                  borderRadius: DesignTokens.borderRadiusSmall,
+                ),
+                child: IconButton(
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -135,12 +132,94 @@ class HomeTab extends StatelessWidget {
                     color: DesignTokens.textSecondary,
                     size: 20,
                   ),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
                 ),
-              ],
-            ),
-          ],
-        ),
-      ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: DesignTokens.space16),
+          
+          // Bottom row: date/time + streak
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DesignTokens.backgroundPrimary.withOpacity(0.6),
+                      borderRadius: DesignTokens.borderRadiusSmall,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.clock,
+                          color: DesignTokens.textSecondary,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          timeStr,
+                          style: DesignTokens.labelSmall.copyWith(
+                            color: DesignTokens.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    dateStr,
+                    style: DesignTokens.labelSmall.copyWith(
+                      color: DesignTokens.textTertiary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: DesignTokens.warning.withOpacity(0.15),
+                  borderRadius: DesignTokens.borderRadiusSmall,
+                  border: Border.all(
+                    color: DesignTokens.warning.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      LucideIcons.flame,
+                      color: DesignTokens.warning,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${userData['streak']}',
+                      style: DesignTokens.labelMedium.copyWith(
+                        color: DesignTokens.warning,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -318,13 +397,13 @@ class HomeTab extends StatelessWidget {
     final alerts = [
       {
         'subject': 'Chemistry',
-        'detail': 'Exam in 4 days — 8.8 hrs study deficit — Pass probability: 67%',
+        'detail': 'Exam in 4 days — Study deficit: 8.8 hrs',
         'risk': 85.0,
         'icon': LucideIcons.alertTriangle,
       },
       {
         'subject': 'Mathematics',
-        'detail': 'Integration mastery: 42% — 12.5 hrs needed for target',
+        'detail': 'Integration mastery: 42% — Need 12.5 hrs',
         'risk': 65.0,
         'icon': LucideIcons.trendingDown,
       },
@@ -341,12 +420,13 @@ class HomeTab extends StatelessWidget {
         ...alerts.map((alert) => Padding(
           padding: const EdgeInsets.only(bottom: DesignTokens.space12),
           child: GlassmorphicCard(
-            padding: const EdgeInsets.all(DesignTokens.space20),
+            padding: const EdgeInsets.all(DesignTokens.space16),
             borderColor: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.4),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(DesignTokens.space12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.15),
                     borderRadius: DesignTokens.borderRadiusSmall,
@@ -354,46 +434,54 @@ class HomeTab extends StatelessWidget {
                   child: Icon(
                     alert['icon'] as IconData,
                     color: DesignTokens.getRiskColor(alert['risk'] as double),
-                    size: 24,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: DesignTokens.space16),
+                const SizedBox(width: DesignTokens.space12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            alert['subject'] as String,
-                            style: DesignTokens.heading3,
+                          Flexible(
+                            child: Text(
+                              alert['subject'] as String,
+                              style: DesignTokens.heading3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           const SizedBox(width: DesignTokens.space8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: DesignTokens.space8,
-                              vertical: 4,
+                              horizontal: 8,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${(alert['risk'] as double).toInt()}% risk',
+                              '${(alert['risk'] as double).toInt()}%',
                               style: DesignTokens.labelSmall.copyWith(
                                 color: DesignTokens.getRiskColor(alert['risk'] as double),
                                 fontWeight: FontWeight.w700,
+                                fontSize: 9,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: DesignTokens.space8),
+                      const SizedBox(height: 6),
                       Text(
                         alert['detail'] as String,
                         style: DesignTokens.bodySmall.copyWith(
                           color: DesignTokens.textSecondary,
+                          height: 1.4,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -413,27 +501,13 @@ class HomeTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(
-              LucideIcons.target,
-              color: Color(0xFF8B5CF6),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'TODAY\'S MISSIONS',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        Text(
+          "Today's Missions",
+          style: DesignTokens.heading1,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: DesignTokens.space16),
         ...todayPlan.map((mission) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: DesignTokens.space12),
               child: MissionCard(
                 time: mission['time'] as String,
                 task: mission['task'] as String,
@@ -458,27 +532,13 @@ class HomeTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
-          children: [
-            Icon(
-              LucideIcons.target,
-              color: Color(0xFFEC4899),
-              size: 24,
-            ),
-            SizedBox(width: 12),
-            Text(
-              'STUDY TARGETS',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        Text(
+          'Study Targets',
+          style: DesignTokens.heading1,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: DesignTokens.space16),
         ...targets.map((target) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: DesignTokens.space12),
               child: StudyTargetCard(
                 target: target,
                 onToggle: () {
@@ -504,33 +564,19 @@ class HomeTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
-          children: [
-            Icon(
-              LucideIcons.trendingUp,
-              color: Color(0xFF22D3EE),
-              size: 24,
-            ),
-            SizedBox(width: 12),
-            Text(
-              'MOMENTUM',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        Text(
+          'Active Projects',
+          style: DesignTokens.heading1,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: DesignTokens.space16),
         Row(
           children: pinnedProjects.map((project) {
             final isPositive = project.momentum.contains('+');
             return Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: DesignTokens.space12),
                 child: GlassmorphicCard(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(DesignTokens.space16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -539,42 +585,38 @@ class HomeTab extends StatelessWidget {
                         children: [
                           Text(
                             project.emoji,
-                            style: const TextStyle(fontSize: 32),
+                            style: const TextStyle(fontSize: 28),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 6,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: isPositive
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFDC2626),
-                              borderRadius: BorderRadius.circular(8),
+                                  ? DesignTokens.success
+                                  : DesignTokens.error,
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               project.momentum,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                              style: DesignTokens.labelSmall.copyWith(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.textPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: DesignTokens.space12),
                       Text(
                         project.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
+                        style: DesignTokens.heading3.copyWith(fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: DesignTokens.space12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -582,28 +624,24 @@ class HomeTab extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'POWER',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey.shade400,
-                                  fontWeight: FontWeight.w900,
+                                'Score',
+                                style: DesignTokens.labelSmall.copyWith(
+                                  fontSize: 9,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 '${project.power}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                style: DesignTokens.dataMedium.copyWith(
+                                  fontSize: 20,
                                 ),
                               ),
                             ],
                           ),
-                          const Icon(
+                          Icon(
                             LucideIcons.zap,
-                            color: Color(0xFFFACC15),
-                            size: 24,
+                            color: DesignTokens.warning,
+                            size: 20,
                           ),
                         ],
                       ),
