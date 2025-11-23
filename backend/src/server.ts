@@ -176,8 +176,8 @@ const start = async () => {
     const server = buildServer();
 
     const port = Number(process.env.PORT || 8080);
-    const host = process.env.HOST || "0.0.0.0";
-    await server.listen({ port, host });
+    // Railway REQUIRES 0.0.0.0 to accept external connections
+    await server.listen({ port, host: "0.0.0.0" });
 
     console.log("✅ Cerebellum OS Brain running");
     console.log("📖 Docs: /docs | 🩺 Health: /health");
