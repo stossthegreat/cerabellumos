@@ -131,111 +131,73 @@ class TeacherTab extends StatelessWidget {
   }
 
   Widget _buildNeuralCore(BuildContext context) {
-    return GlassmorphicCard(
-      padding: const EdgeInsets.all(32),
-      borderColor: const Color(0xFF8B5CF6).withOpacity(0.5),
-      gradientColors: [
-        const Color(0xFF8B5CF6).withOpacity(0.3),
-        const Color(0xFF6D28D9).withOpacity(0.3),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'NEURAL ANALYSIS ENGINE',
-                      style: TextStyle(
-                        color: Color(0xFF22D3EE),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'ELITE AI INSIGHTS',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Intelligence Briefing',
+              style: DesignTokens.displayMedium,
+            ),
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.space8),
+              decoration: BoxDecoration(
+                color: DesignTokens.primary.withOpacity(0.15),
+                borderRadius: DesignTokens.borderRadiusSmall,
               ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF8B5CF6),
-                    width: 2,
-                  ),
-                ),
-                child: const Icon(
-                  LucideIcons.brain,
-                  color: Color(0xFF8B5CF6),
-                  size: 32,
-                ),
+              child: Icon(
+                LucideIcons.brain,
+                color: DesignTokens.primary,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: DesignTokens.space16),
+        
+        GlassmorphicCard(
+          padding: const EdgeInsets.all(DesignTokens.space24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+          
+          // Timestamp
+          Row(
+            children: [
+              Icon(
+                LucideIcons.clock,
+                color: DesignTokens.textTertiary,
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Generated Today at 07:00 AM',
+                style: DesignTokens.labelSmall,
               ),
             ],
           ),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: DesignTokens.space24),
           
-          // Generated Timestamp
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.clock,
-                  color: Colors.grey.shade400,
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Generated Today at 07:00 AM',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 32),
-          
-          // THREAT ASSESSMENT Section
+          // Threat Assessment
           _buildIntelSection(
             icon: LucideIcons.alertTriangle,
-            iconColor: const Color(0xFFDC2626),
-            title: 'THREAT ASSESSMENT',
+            iconColor: DesignTokens.error,
+            title: 'Threat Assessment',
             content: 'Chemistry exam in 5 days. Current mastery: 62%. Predicted outcome: 72% (C grade). Biology in 12 days looking strong at 78%. Math in 17 days needs urgent attention - only 45% mastery.',
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignTokens.space20),
           
-          // WEAK POINTS Section
+          // Weak Points
           _buildIntelSection(
             icon: LucideIcons.target,
-            iconColor: const Color(0xFFF59E0B),
-            title: 'WEAK POINTS',
+            iconColor: DesignTokens.warning,
+            title: 'Weak Points',
             bulletPoints: [
               'Organic Chemistry reactions - 3 sessions, score still 40%',
               'Calculus integration - avoiding this topic for 1 week',
@@ -243,23 +205,23 @@ class TeacherTab extends StatelessWidget {
             ],
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignTokens.space20),
           
-          // PREDICTIONS Section
+          // Predictions
           _buildIntelSection(
             icon: LucideIcons.trendingUp,
-            iconColor: const Color(0xFF8B5CF6),
-            title: 'PREDICTIONS',
+            iconColor: DesignTokens.primary,
+            title: 'Predictions',
             content: 'At current rate: Chemistry 72% (C), Biology 91% (A-), Math 58% (D).\n\nIf you push Chemistry to 2h/day for next 4 days, you can hit 85% (B+). Math needs 6 hours minimum to reach passing grade.',
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignTokens.space20),
           
-          // TODAY'S MISSIONS Section
+          // Today's Missions
           _buildIntelSection(
             icon: LucideIcons.listTodo,
-            iconColor: const Color(0xFF10B981),
-            title: 'TODAY\'S MISSIONS',
+            iconColor: DesignTokens.success,
+            title: "Today's Missions",
             missions: [
               {'time': '09:00', 'subject': 'Chemistry', 'task': 'Organic Reactions Mechanisms (60 min)', 'priority': 'CRITICAL'},
               {'time': '11:00', 'subject': 'Math', 'task': 'Integration Practice Problems (45 min)', 'priority': 'HIGH'},
@@ -268,18 +230,20 @@ class TeacherTab extends StatelessWidget {
             ],
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignTokens.space20),
           
-          // BEHAVIORAL INSIGHTS Section
+          // Behavioral Insights
           _buildIntelSection(
             icon: LucideIcons.eye,
-            iconColor: const Color(0xFFEC4899),
-            title: 'BEHAVIORAL INSIGHTS',
+            iconColor: DesignTokens.info,
+            title: 'Behavioral Insights',
             content: 'You study best 9am-11am (mastery jumps 12% avg) but keep wasting it on YouTube. You say chemistry is priority but studied biology 3x more this week - exam is in 5 DAYS.',
             isWarning: true,
           ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -293,17 +257,17 @@ class TeacherTab extends StatelessWidget {
     bool isWarning = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(DesignTokens.space20),
       decoration: BoxDecoration(
         color: isWarning 
-            ? const Color(0xFFDC2626).withOpacity(0.1)
-            : Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16),
+            ? DesignTokens.error.withOpacity(0.1)
+            : DesignTokens.surfaceDefault,
+        borderRadius: DesignTokens.borderRadiusMedium,
         border: Border.all(
           color: isWarning 
-              ? const Color(0xFFDC2626).withOpacity(0.5)
-              : Colors.white.withOpacity(0.1),
-          width: isWarning ? 2 : 1,
+              ? DesignTokens.error.withOpacity(0.4)
+              : DesignTokens.borderDefault,
+          width: 1,
         ),
       ),
       child: Column(
@@ -324,14 +288,11 @@ class TeacherTab extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DesignTokens.space12),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
+                style: DesignTokens.heading3.copyWith(
                   color: iconColor,
-                  letterSpacing: 1,
                 ),
               ),
             ],
