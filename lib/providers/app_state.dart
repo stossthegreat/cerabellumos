@@ -103,43 +103,6 @@ class AppState extends ChangeNotifier {
     },
   ];
 
-  final todayPlan = [
-    {
-      'id': 1,
-      'time': '09:00',
-      'task': 'Organic Chemistry - Reactions',
-      'duration': '45 min',
-      'done': true,
-      'priority': 'ELITE',
-      'efficiency': 94
-    },
-    {
-      'id': 2,
-      'time': '10:30',
-      'task': 'Biology - Cell Division',
-      'duration': '30 min',
-      'done': true,
-      'priority': 'HIGH',
-      'efficiency': 88
-    },
-    {
-      'id': 3,
-      'time': '14:00',
-      'task': 'Math - Integration Practice',
-      'duration': '40 min',
-      'done': false,
-      'priority': 'CRITICAL',
-      'efficiency': 0
-    },
-    {
-      'id': 4,
-      'time': '16:00',
-      'task': 'Chemistry - Past Papers',
-      'duration': '60 min',
-      'done': false,
-      'priority': 'HIGH',
-      'efficiency': 0
-    },
-  ];
+  final List<Map<String, dynamic>> todayPlan = [];
 }
 

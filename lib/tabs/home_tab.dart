@@ -498,6 +498,10 @@ class HomeTab extends StatelessWidget {
     final appState = context.watch<AppState>();
     final todayPlan = appState.todayPlan;
 
+    if (todayPlan.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -657,9 +661,6 @@ class HomeTab extends StatelessWidget {
   }
 
   Widget _buildIntensitySlider(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final targetHours = appState.intensity; // Using existing intensity as target
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -668,66 +669,7 @@ class HomeTab extends StatelessWidget {
           style: DesignTokens.heading1,
         ),
         const SizedBox(height: DesignTokens.space16),
-        GlassmorphicCard(
-          padding: const EdgeInsets.all(DesignTokens.space20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Study Hours',
-                        style: DesignTokens.labelMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '23.4 / ${targetHours.toInt()}h',
-                        style: DesignTokens.dataMedium,
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '${((23.4 / targetHours) * 100).toInt()}%',
-                    style: DesignTokens.dataLarge.copyWith(
-                      color: DesignTokens.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DesignTokens.space16),
-              SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: 8,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
-                  activeTrackColor: DesignTokens.primary,
-                  inactiveTrackColor: DesignTokens.borderDefault,
-                  thumbColor: DesignTokens.primary,
-                  overlayColor: DesignTokens.primary.withOpacity(0.2),
-                ),
-                child: Slider(
-                  value: targetHours,
-                  min: 10,
-                  max: 60,
-                  divisions: 50,
-                  label: '${targetHours.toInt()}h target',
-                  onChanged: (value) {
-                    appState.setIntensity(value);
-                  },
-                ),
-              ),
-              const SizedBox(height: DesignTokens.space12),
-              Text(
-                'Adjust your weekly study target',
-                style: DesignTokens.labelSmall,
-              ),
-            ],
-          ),
-        ),
+        const _WeeklyTargetCard(),
       ],
     );
   }
@@ -865,4 +807,75 @@ class HomeTab extends StatelessWidget {
   }
 }
 
+// Isolated widget for Weekly Target to prevent page jumping when slider moves
+class _WeeklyTargetCard extends StatelessWidget {
+  const _WeeklyTargetCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final targetHours = appState.intensity;
+
+    return GlassmorphicCard(
+      padding: const EdgeInsets.all(DesignTokens.space20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Study Hours',
+                    style: DesignTokens.labelMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '23.4 / ${targetHours.toInt()}h',
+                    style: DesignTokens.dataMedium,
+                  ),
+                ],
+              ),
+              Text(
+                '${((23.4 / targetHours) * 100).toInt()}%',
+                style: DesignTokens.dataLarge.copyWith(
+                  color: DesignTokens.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.space16),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 8,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+              activeTrackColor: DesignTokens.primary,
+              inactiveTrackColor: DesignTokens.borderDefault,
+              thumbColor: DesignTokens.primary,
+              overlayColor: DesignTokens.primary.withOpacity(0.2),
+            ),
+            child: Slider(
+              value: targetHours,
+              min: 10,
+              max: 60,
+              divisions: 50,
+              label: '${targetHours.toInt()}h target',
+              onChanged: (value) {
+                appState.setIntensity(value);
+              },
+            ),
+          ),
+          const SizedBox(height: DesignTokens.space12),
+          Text(
+            'Adjust your weekly study target',
+            style: DesignTokens.labelSmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
