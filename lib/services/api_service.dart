@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/coaching_message.dart';
 
 class ApiService {
   // 🚂 RAILWAY PRODUCTION BACKEND
@@ -192,6 +193,68 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to solve problem');
+    }
+  }
+
+  // ========================
+  // COACHING MESSAGES
+  // ========================
+
+  static Future<List<CoachingMessage>> getCoachingMessages() async {
+    print('📊 Fetching coaching messages...');
+    final headers = await _getHeaders();
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/coaching/messages'),
+      headers: headers,
+    );
+
+    print('📊 Coaching messages response: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      print('📊 Received ${data.length} coaching messages');
+      return data.map((m) => CoachingMessage.fromJson(m)).toList();
+    } else {
+      print('❌ Failed to fetch coaching messages: ${response.body}');
+      return [];
+    }
+  }
+
+  static Future<void> dismissCoachingMessage(String messageId) async {
+    print('🗑️ Dismissing coaching message: $messageId');
+    final headers = await _getHeaders();
+    
+    await http.post(
+      Uri.parse('$baseUrl/api/coaching/messages/$messageId/dismiss'),
+      headers: headers,
+    );
+  }
+
+  static Future<void> completeCoachingAction(String messageId, String actionType) async {
+    print('✅ Completing coaching action: $actionType for message $messageId');
+    final headers = await _getHeaders();
+    
+    await http.post(
+      Uri.parse('$baseUrl/api/coaching/messages/$messageId/complete'),
+      headers: headers,
+      body: jsonEncode({'actionType': actionType}),
+    );
+  }
+
+  static Future<void> generateCoachingMessages() async {
+    print('🎯 Manually triggering coaching generation...');
+    final headers = await _getHeaders();
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/coaching/generate'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      print('✅ Coaching messages generated successfully');
+    } else {
+      print('❌ Failed to generate coaching messages: ${response.body}');
     }
   }
 }

@@ -11,6 +11,7 @@ import { voiceService } from "../services/voice.service";
 // Removed nudgesService - using AI-generated study nudges instead
 import { studyIntelligence } from "../services/study-intelligence.service";
 import { aiStudyPrompts } from "../services/ai-study-prompts.service";
+import { coachingService } from "../services/coaching.service";
 
 const QUEUE = "scheduler";
 export const schedulerQueue = new Queue(QUEUE, { connection: redis });
@@ -64,6 +65,13 @@ export async function bootstrapSchedulers() {
   // Weekly consolidation (Sundays at midnight)
   await schedulerQueue.add("weekly-consolidation", {}, {
     repeat: { pattern: "0 0 * * 0" }, // Sunday 00:00
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
+  // Smart coaching messages (hourly)
+  await schedulerQueue.add("coaching-messages", {}, {
+    repeat: { every: 60 * 60_000 }, // Every hour
     removeOnComplete: true,
     removeOnFail: true,
   });
@@ -484,6 +492,30 @@ async function runWeeklyConsolidation() {
   return { ok: true, processed: users.length };
 }
 
+async function generateCoachingMessages() {
+  const users = await prisma.user.findMany({
+    where: { coachingEnabled: true },
+    select: { id: true },
+  });
+
+  console.log(`🎯 Generating smart coaching messages for ${users.length} users...`);
+
+  let messagesGenerated = 0;
+  for (const user of users) {
+    try {
+      const messages = await coachingService.generateSmartCoaching(user.id);
+      await coachingService.storeCoachingMessages(user.id, messages);
+      messagesGenerated += messages.length;
+      console.log(`✅ Generated ${messages.length} coaching messages for ${user.id}`);
+    } catch (err) {
+      console.error(`Failed coaching generation for ${user.id}:`, err);
+    }
+  }
+
+  console.log(`✅ Total coaching messages generated: ${messagesGenerated}\n`);
+  return { ok: true, users: users.length, messages: messagesGenerated };
+}
+
 // ─────────────────────────────────────────────
 // WORKER - ONLY START WHEN EXPLICITLY CALLED
 // ─────────────────────────────────────────────
@@ -528,6 +560,8 @@ export function startWorker() {
           return analyzeStudySession(job.data.sessionId);
         case "weekly-consolidation":
           return runWeeklyConsolidation();
+        case "coaching-messages":
+          return generateCoachingMessages();
           
         // Legacy/backward compat
         case "ensure-daily-briefs":

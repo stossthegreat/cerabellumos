@@ -39,11 +39,12 @@ model User {
   plan         Plan    @default(FREE)
 
   // Study OS specific
-  mentorId       String? // AI personality (marcus, drill, etc)
-  fcmToken       String? // Firebase Cloud Messaging token for push
-  nudgesEnabled  Boolean @default(true)
-  intelEnabled   Boolean @default(true) // Daily Intel generation
-  studyReminders Boolean @default(true)
+  mentorId        String?  // AI personality (marcus, drill, etc)
+  fcmToken        String?  // Firebase Cloud Messaging token for push
+  nudgesEnabled   Boolean  @default(true)
+  intelEnabled    Boolean  @default(true) // Daily Intel generation
+  coachingEnabled Boolean  @default(true) // Smart coaching messages
+  studyReminders  Boolean  @default(true)
 
   // Study preferences
   grade         String? // "Year 11", "Sophomore", etc
@@ -55,18 +56,19 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations - Study OS
-  events          Event[]
-  userFacts       UserFacts?
-  exams           Exam[]
-  studySessions   StudySession[]
-  topicMastery    TopicMastery[]
-  projects        Project[]
-  scannedProblems ScannedProblem[]
-  videoSummaries  VideoSummary[]
-  studyTargets    StudyTarget[]
-  coachMessages   CoachMessage[]
-  quizzes         Quiz[]
-  flashcards      Flashcard[]
+  events           Event[]
+  userFacts        UserFacts?
+  exams            Exam[]
+  studySessions    StudySession[]
+  topicMastery     TopicMastery[]
+  projects         Project[]
+  scannedProblems  ScannedProblem[]
+  videoSummaries   VideoSummary[]
+  studyTargets     StudyTarget[]
+  coachMessages    CoachMessage[]
+  coachingMessages CoachingMessage[]
+  quizzes          Quiz[]
+  flashcards       Flashcard[]
 }
 
 // ============================================================
@@ -120,6 +122,26 @@ model CoachMessage {
   @@index([userId])
   @@index([userId, kind])
   @@index([userId, createdAt])
+}
+
+// Smart Coaching Messages (AI-generated actionable guidance)
+model CoachingMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // "exam_prep", "drift_recovery", "momentum", "consistency"
+  priority  String // "high", "medium", "low"
+  title     String
+  content   Json // Full message with plan, actions, etc.
+  status    String   @default("active") // "active", "dismissed", "completed"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, expiresAt])
+  @@index([status, expiresAt])
 }
 
 // ============================================================
