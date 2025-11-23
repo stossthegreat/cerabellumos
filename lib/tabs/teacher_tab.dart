@@ -13,6 +13,7 @@ class TeacherTab extends StatelessWidget {
   // Mock Identity Engine Data
   Map<String, dynamic> get _identityEngine => {
     'archetype': 'Consistent Achiever',
+    'archetypeIcon': '🎯',
     'confidence': 87,
     'direction': 'Increasing consistency',
     'directionTrend': 'up', // up, down, stable
