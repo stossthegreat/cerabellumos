@@ -227,11 +227,13 @@ class CoachingService {
     const now = new Date();
     const currentHour = now.getHours();
     
-    // Parse peak window (e.g., "9-11 AM")
-    const peakWindow = intel.studyPatterns.peakPerformanceWindow;
-    if (!peakWindow) return messages;
+    // Get peak windows from study patterns
+    const peakWindows = intel.studyPatterns.peak_study_windows || [];
+    if (peakWindows.length === 0) return messages;
 
-    const match = peakWindow.match(/(\d+)-(\d+)/);
+    // Check if we're in any peak window
+    const peakWindow = peakWindows[0]; // Use the first (most effective) peak window
+    const match = peakWindow.time.match(/(\d+)-(\d+)/);
     if (!match) return messages;
 
     const [, startStr, endStr] = match;
@@ -252,7 +254,7 @@ class CoachingService {
         priority: "high",
         title: "Peak Performance Window",
         context: {
-          peakWindow,
+          peakWindow: peakWindow.time,
           masteryBoost: "+12% avg during this time",
           currentTopic: topicName,
           currentMastery: `${mastery}%`,
@@ -292,7 +294,7 @@ class CoachingService {
   private generateConsistencyMessages(intel: UserIntelState): CoachingMessageData[] {
     const messages: CoachingMessageData[] = [];
 
-    const consistencyScore = intel.studyPatterns.consistencyScore || 0;
+    const consistencyScore = intel.studyPatterns.consistency_score || 0;
     
     // Only coach if consistency is below 70%
     if (consistencyScore >= 70) return messages;
@@ -388,7 +390,7 @@ class CoachingService {
           type: msg.type,
           priority: msg.priority,
           title: msg.title,
-          content: msg,
+          content: msg as any, // Cast to any for Prisma Json type compatibility
           status: "active",
           expiresAt,
         },
