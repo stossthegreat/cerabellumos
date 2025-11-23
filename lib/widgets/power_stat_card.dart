@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'glassmorphic_card.dart';
+import '../core/design_tokens.dart';
 
 class PowerStatCard extends StatefulWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color color;
+  final Color? color;
+  final double? trend;
+  final String? subtitle;
+  final VoidCallback? onTap;
 
   const PowerStatCard({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
-    required this.color,
+    this.color,
+    this.trend,
+    this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -24,55 +31,94 @@ class _PowerStatCardState extends State<PowerStatCard> {
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = widget.color ?? DesignTokens.primary;
+
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: (_) => setState(() => _isHovered = true),
       onTapUp: (_) => setState(() => _isHovered = false),
       onTapCancel: () => setState(() => _isHovered = false),
       child: AnimatedScale(
-        scale: _isHovered ? 1.1 : 1.0,
-        duration: const Duration(milliseconds: 200),
+        scale: _isHovered ? 1.02 : 1.0,
+        duration: DesignTokens.durationFast,
         child: GlassmorphicCard(
-          padding: const EdgeInsets.all(16),
-          borderColor: Colors.white.withOpacity(0.2),
-          gradientColors: [
-            widget.color.withOpacity(0.4),
-            widget.color.withOpacity(0.1),
-          ],
+          padding: const EdgeInsets.all(DesignTokens.space16),
+          backgroundColor: DesignTokens.surfaceDefault,
+          borderColor: _isHovered ? accentColor.withOpacity(0.4) : DesignTokens.borderDefault,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                widget.icon,
-                color: Colors.white.withOpacity(0.9),
-                size: 24,
-              ),
-              const SizedBox(height: 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  widget.label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.grey.shade400,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
+              // Top row: Icon + Trend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(DesignTokens.space8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.15),
+                      borderRadius: DesignTokens.borderRadiusSmall,
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: accentColor,
+                      size: 20,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  if (widget.trend != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          DesignTokens.getTrendIcon(widget.trend!),
+                          color: DesignTokens.getTrendColor(widget.trend!),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.trend! > 0 ? '+' : ''}${widget.trend!.toStringAsFixed(0)}%',
+                          style: DesignTokens.labelSmall.copyWith(
+                            color: DesignTokens.getTrendColor(widget.trend!),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
-              const SizedBox(height: 6),
+              
+              const SizedBox(height: DesignTokens.space12),
+              
+              // Value
               FittedBox(
                 fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
                 child: Text(
                   widget.value,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: DesignTokens.dataMedium,
                 ),
+              ),
+              
+              const SizedBox(height: DesignTokens.space4),
+              
+              // Label + optional subtitle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.label,
+                    style: DesignTokens.labelMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (widget.subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle!,
+                      style: DesignTokens.labelSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

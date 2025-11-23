@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
 import '../providers/app_state.dart';
 import '../providers/study_targets_provider.dart';
 import '../providers/projects_provider.dart';
-import '../widgets/animated_blob.dart';
+import '../core/design_tokens.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/power_stat_card.dart';
 import '../widgets/mission_card.dart';
@@ -18,185 +19,159 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // POWER BACKGROUND
-          const Positioned.fill(
-            child: _PowerBackground(),
-          ),
-          
-          // MAIN CONTENT
-          SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                // Header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 40),
-                        _buildPowerStats(context),
-                        const SizedBox(height: 40),
-                        _buildCriticalAlerts(context),
-                        const SizedBox(height: 40),
-                        _buildTodaysMissions(context),
-                        const SizedBox(height: 40),
-                        _buildStudyTargets(context),
-                        const SizedBox(height: 40),
-                        _buildMomentumCards(context),
-                        const SizedBox(height: 40),
-                        _buildIntensitySlider(context),
-                        const SizedBox(height: 40),
-                        _buildDominationRoadmap(context),
-                        const SizedBox(height: 100), // Space for FAB
-                      ],
-                    ),
-                  ),
+      backgroundColor: DesignTokens.backgroundPrimary,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(DesignTokens.space24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildPowerStats(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildCriticalAlerts(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildTodaysMissions(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildStudyTargets(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildMomentumCards(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildIntensitySlider(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildDominationRoadmap(context),
+                    const SizedBox(height: 120), // Space for FAB
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          
-          // FLOATING ACTION BUTTON (Bottom-Right)
-          Positioned(
-            bottom: 120,
-            right: 32,
-            child: _buildFAB(context),
-          ),
-        ],
+          ],
+        ),
       ),
+      floatingActionButton: _buildFAB(context),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     final appState = context.watch<AppState>();
     final userData = appState.userData;
+    final now = DateTime.now();
+    final dateStr = DateFormat('EEEE, MMM d').format(now);
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF8B5CF6),
-                      Color(0xFFA855F7),
-                      Color(0xFFEC4899),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mission Control',
+                    style: DesignTokens.displayLarge,
+                  ),
+                  const SizedBox(height: DesignTokens.space4),
+                  Text(
+                    dateStr,
+                    style: DesignTokens.labelMedium,
+                  ),
+                ],
+              ),
+            ),
+            // Streak badge + settings
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignTokens.space16,
+                    vertical: DesignTokens.space8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.primary.withOpacity(0.15),
+                    borderRadius: DesignTokens.borderRadiusSmall,
+                    border: Border.all(
+                      color: DesignTokens.primary.withOpacity(0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        LucideIcons.flame,
+                        color: DesignTokens.primary,
+                        size: 18,
+                      ),
+                      const SizedBox(width: DesignTokens.space8),
+                      Text(
+                        '${userData['streak']} day streak',
+                        style: DesignTokens.labelMedium.copyWith(
+                          color: DesignTokens.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.8),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                  border: Border.all(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.8),
-                    width: 2,
+                ),
+                const SizedBox(width: DesignTokens.space12),
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  },
+                  icon: const Icon(
+                    LucideIcons.settings,
+                    color: DesignTokens.textSecondary,
+                    size: 20,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    userData['avatar'] as String,
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Name and Level
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'ELITE MODE UNLOCKED',
-                      style: TextStyle(
-                        color: Color(0xFF22D3EE),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      userData['name'] as String,
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'LEVEL ${userData['level']} • ${userData['streak']} DAY DOMINATION',
-                      style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Settings Icon
-        IconButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
-          },
-          icon: const Icon(
-            LucideIcons.settings,
-            color: Colors.white,
-            size: 24,
-          ),
+              ],
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildPowerStats(BuildContext context) {
-    final archiveStats = [
+    final stats = [
       {
-        'label': 'TOTAL STUDY HOURS',
-        'value': '247h',
+        'label': 'Study Hours',
+        'value': '23.4 / 40',
+        'subtitle': 'Weekly target',
         'icon': LucideIcons.clock,
-        'color': const Color(0xFF8B5CF6),
+        'color': DesignTokens.primary,
+        'trend': -8.0,
       },
       {
-        'label': 'PEAK STREAK',
-        'value': '28 Days',
+        'label': 'Active Streak',
+        'value': '12 days',
+        'subtitle': 'Peak: 28 days',
         'icon': LucideIcons.flame,
-        'color': const Color(0xFFF97316),
+        'color': DesignTokens.warning,
+        'trend': 0.0,
       },
       {
-        'label': 'SESSIONS COMPLETED',
+        'label': 'Sessions',
         'value': '186',
+        'subtitle': 'Completed',
         'icon': LucideIcons.checkCircle,
-        'color': const Color(0xFF10B981),
+        'color': DesignTokens.success,
+        'trend': 12.0,
       },
       {
-        'label': 'CONCEPTS MASTERED',
-        'value': '142',
+        'label': 'Mastery',
+        'value': '68%',
+        'subtitle': 'Avg across topics',
         'icon': LucideIcons.brain,
-        'color': const Color(0xFF06B6D4),
+        'color': DesignTokens.info,
+        'trend': 5.0,
       },
     ];
 
@@ -205,62 +180,20 @@ class HomeTab extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.3,
+        crossAxisSpacing: DesignTokens.space16,
+        mainAxisSpacing: DesignTokens.space16,
+        childAspectRatio: 1.4,
       ),
-      itemCount: archiveStats.length,
+      itemCount: stats.length,
       itemBuilder: (context, index) {
-        final stat = archiveStats[index];
-        return GlassmorphicCard(
-          padding: const EdgeInsets.all(16),
-          gradientColors: [
-            (stat['color'] as Color).withOpacity(0.2),
-            (stat['color'] as Color).withOpacity(0.05),
-          ],
-          borderColor: (stat['color'] as Color).withOpacity(0.3),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                stat['icon'] as IconData,
-                color: stat['color'] as Color,
-                size: 28,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      stat['label'] as String,
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: Colors.grey.shade400,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      stat['value'] as String,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        final stat = stats[index];
+        return PowerStatCard(
+          label: stat['label'] as String,
+          value: stat['value'] as String,
+          subtitle: stat['subtitle'] as String?,
+          icon: stat['icon'] as IconData,
+          color: stat['color'] as Color,
+          trend: stat['trend'] as double?,
         );
       },
     );
@@ -269,100 +202,92 @@ class HomeTab extends StatelessWidget {
   Widget _buildCriticalAlerts(BuildContext context) {
     final alerts = [
       {
-        'title': 'CHEMISTRY CRISIS',
-        'detail': 'Only 5 days. 38% unprepared. URGENT.',
-        'icon': '🔴',
+        'subject': 'Chemistry',
+        'detail': 'Exam in 4 days — 8.8 hrs study deficit — Pass probability: 67%',
+        'risk': 85.0,
+        'icon': LucideIcons.alertTriangle,
       },
       {
-        'title': 'MATH WEAKNESS',
-        'detail': 'Integration concepts at 40% mastery. Attack now.',
-        'icon': '⚠️',
-      },
-      {
-        'title': 'TIME LEAK',
-        'detail': 'You\'re losing 3 hours/week to distractions. LOCK IN.',
-        'icon': '⏰',
+        'subject': 'Mathematics',
+        'detail': 'Integration mastery: 42% — 12.5 hrs needed for target',
+        'risk': 65.0,
+        'icon': LucideIcons.trendingDown,
       },
     ];
 
-    return GlassmorphicCard(
-      padding: const EdgeInsets.all(24),
-      borderColor: const Color(0xFFDC2626).withOpacity(0.6),
-      gradientColors: [
-        const Color(0xFFDC2626).withOpacity(0.3),
-        Colors.transparent,
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                LucideIcons.bomb,
-                color: Color(0xFFF87171),
-                size: 24,
-              ),
-              SizedBox(width: 12),
-              Text(
-                'CRITICAL ALERTS',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFFF87171),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ...alerts.map((alert) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Critical Alerts',
+          style: DesignTokens.heading1,
+        ),
+        const SizedBox(height: DesignTokens.space16),
+        ...alerts.map((alert) => Padding(
+          padding: const EdgeInsets.only(bottom: DesignTokens.space12),
+          child: GlassmorphicCard(
+            padding: const EdgeInsets.all(DesignTokens.space20),
+            borderColor: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.4),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(DesignTokens.space12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFDC2626).withOpacity(0.4),
-                    ),
+                    color: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.15),
+                    borderRadius: DesignTokens.borderRadiusSmall,
                   ),
-                  child: Row(
+                  child: Icon(
+                    alert['icon'] as IconData,
+                    color: DesignTokens.getRiskColor(alert['risk'] as double),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.space16),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        alert['icon'] as String,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              alert['title'] as String,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFF87171),
-                                fontSize: 14,
-                              ),
+                      Row(
+                        children: [
+                          Text(
+                            alert['subject'] as String,
+                            style: DesignTokens.heading3,
+                          ),
+                          const SizedBox(width: DesignTokens.space8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DesignTokens.space8,
+                              vertical: 4,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              alert['detail'] as String,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade400,
+                            decoration: BoxDecoration(
+                              color: DesignTokens.getRiskColor(alert['risk'] as double).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '${(alert['risk'] as double).toInt()}% risk',
+                              style: DesignTokens.labelSmall.copyWith(
+                                color: DesignTokens.getRiskColor(alert['risk'] as double),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: DesignTokens.space8),
+                      Text(
+                        alert['detail'] as String,
+                        style: DesignTokens.bodySmall.copyWith(
+                          color: DesignTokens.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-              )),
-        ],
-      ),
+              ],
+            ),
+          ),
+        )),
+      ],
     );
   }
 
@@ -580,205 +505,170 @@ class HomeTab extends StatelessWidget {
 
   Widget _buildIntensitySlider(BuildContext context) {
     final appState = context.watch<AppState>();
-    final intensity = appState.intensity;
-
-    return GlassmorphicCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'STUDY INTENSITY',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                '${intensity.toInt()}%',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFFDC2626),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 12,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
-              activeTrackColor: const Color(0xFFDC2626),
-              inactiveTrackColor: Colors.white.withOpacity(0.1),
-              thumbColor: const Color(0xFFDC2626),
-              overlayColor: const Color(0xFFDC2626).withOpacity(0.3),
-            ),
-            child: Slider(
-              value: intensity,
-              min: 0,
-              max: 100,
-              onChanged: (value) {
-                appState.setIntensity(value);
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'BEAST MODE ${'▸' * (intensity / 10).ceil()}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade400,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDominationRoadmap(BuildContext context) {
-    final roadmap = [
-      {
-        'priority': 1,
-        'task': 'CHEMISTRY: Organic Reactions Deep Dive',
-        'time': '2h TODAY',
-        'impact': 'CRITICAL',
-        'energy': '🔥🔥🔥',
-      },
-      {
-        'priority': 2,
-        'task': 'MATH: Integration Mastery Session',
-        'time': '1.5h TODAY',
-        'impact': 'HIGH',
-        'energy': '🔥🔥',
-      },
-      {
-        'priority': 3,
-        'task': 'BIOLOGY: Photosynthesis Quiz Blitz',
-        'time': '45m TOMORROW',
-        'impact': 'MEDIUM',
-        'energy': '🔥',
-      },
-    ];
-
-    Color getImpactColor(String impact) {
-      switch (impact) {
-        case 'CRITICAL':
-          return const Color(0xFFDC2626);
-        case 'HIGH':
-          return const Color(0xFFF97316);
-        default:
-          return const Color(0xFF3B82F6);
-      }
-    }
+    final targetHours = appState.intensity; // Using existing intensity as target
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
-          children: [
-            Icon(
-              LucideIcons.eye,
-              color: Color(0xFF8B5CF6),
-              size: 24,
-            ),
-            SizedBox(width: 12),
-            Text(
-              'DOMINATION ROADMAP',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        Text(
+          'Weekly Target',
+          style: DesignTokens.heading1,
         ),
-        const SizedBox(height: 20),
-        ...roadmap.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+        const SizedBox(height: DesignTokens.space16),
+        GlassmorphicCard(
+          padding: const EdgeInsets.all(DesignTokens.space20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Study Hours',
+                        style: DesignTokens.labelMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '23.4 / ${targetHours.toInt()}h',
+                        style: DesignTokens.dataMedium,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '${((23.4 / targetHours) * 100).toInt()}%',
+                    style: DesignTokens.dataLarge.copyWith(
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DesignTokens.space16),
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 8,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+                  activeTrackColor: DesignTokens.primary,
+                  inactiveTrackColor: DesignTokens.borderDefault,
+                  thumbColor: DesignTokens.primary,
+                  overlayColor: DesignTokens.primary.withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: targetHours,
+                  min: 10,
+                  max: 60,
+                  divisions: 50,
+                  label: '${targetHours.toInt()}h target',
+                  onChanged: (value) {
+                    appState.setIntensity(value);
+                  },
+                ),
+              ),
+              const SizedBox(height: DesignTokens.space12),
+              Text(
+                'Adjust your weekly study target',
+                style: DesignTokens.labelSmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDominationRoadmap(BuildContext context) {
+    final goals = [
+      {
+        'subject': 'Chemistry',
+        'task': 'Master organic reactions',
+        'progress': 0.45,
+        'eta': '2.5 hrs remaining',
+        'priority': 'High',
+      },
+      {
+        'subject': 'Mathematics',
+        'task': 'Complete integration practice',
+        'progress': 0.68,
+        'eta': '1.2 hrs remaining',
+        'priority': 'Medium',
+      },
+      {
+        'subject': 'Biology',
+        'task': 'Cellular respiration review',
+        'progress': 0.22,
+        'eta': '3.8 hrs remaining',
+        'priority': 'Low',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Study Trajectory',
+          style: DesignTokens.heading1,
+        ),
+        const SizedBox(height: DesignTokens.space16),
+        ...goals.map((goal) => Padding(
+              padding: const EdgeInsets.only(bottom: DesignTokens.space12),
               child: GlassmorphicCard(
-                padding: const EdgeInsets.all(20),
-                child: Row(
+                padding: const EdgeInsets.all(DesignTokens.space20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                goal['subject'] as String,
+                                style: DesignTokens.heading3,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                goal['task'] as String,
+                                style: DesignTokens.bodySmall,
+                              ),
+                            ],
+                          ),
                         ),
+                        Text(
+                          '${((goal['progress'] as double) * 100).toInt()}%',
+                          style: DesignTokens.dataMedium.copyWith(
+                            color: DesignTokens.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DesignTokens.space12),
+                    // Progress bar
+                    Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: DesignTokens.backgroundTertiary,
+                        borderRadius: BorderRadius.circular(3),
                       ),
-                      child: Center(
-                        child: Text(
-                          '${item['priority']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            fontSize: 18,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: goal['progress'] as double,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: DesignTokens.primary,
+                            borderRadius: BorderRadius.circular(3),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item['task'] as String,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: getImpactColor(item['impact'] as String),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  item['impact'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                item['time'] as String,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade400,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                item['energy'] as String,
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: DesignTokens.space8),
+                    Text(
+                      goal['eta'] as String,
+                      style: DesignTokens.labelSmall,
                     ),
                   ],
                 ),
@@ -822,128 +712,4 @@ class HomeTab extends StatelessWidget {
   }
 }
 
-class _PowerBackground extends StatefulWidget {
-  const _PowerBackground();
-
-  @override
-  State<_PowerBackground> createState() => _PowerBackgroundState();
-}
-
-class _PowerBackgroundState extends State<_PowerBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 7),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Base gradient
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF0F172A),
-                Colors.black,
-                Colors.black,
-              ],
-            ),
-          ),
-        ),
-        // Top gradient overlay
-        Container(
-          height: 300,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFF8B5CF6).withOpacity(0.5),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-        // Animated blobs
-        AnimatedBlob(
-          color: const Color(0xFF8B5CF6).withOpacity(0.4),
-          size: 400,
-          initialX: -100,
-          initialY: -100,
-        ),
-        AnimatedBlob(
-          color: const Color(0xFFDC2626).withOpacity(0.3),
-          size: 350,
-          initialX: MediaQuery.of(context).size.width - 250,
-          initialY: 100,
-          duration: const Duration(seconds: 9),
-        ),
-        AnimatedBlob(
-          color: const Color(0xFFEC4899).withOpacity(0.3),
-          size: 400,
-          initialX: MediaQuery.of(context).size.width / 2 - 200,
-          initialY: MediaQuery.of(context).size.height - 300,
-          duration: const Duration(seconds: 11),
-        ),
-        // Grid overlay
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.05,
-            child: CustomPaint(
-              painter: _GridPainter(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFEC4899).withOpacity(0.05)
-      ..strokeWidth = 1;
-
-    const gridSize = 50.0;
-
-    // Draw vertical lines
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-
-    // Draw horizontal lines
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
