@@ -11,6 +11,9 @@ import '../widgets/power_stat_card.dart';
 import '../widgets/mission_card.dart';
 import '../widgets/study_target_card.dart';
 import '../widgets/add_target_dialog.dart';
+import '../widgets/coaching_message_card.dart';
+import '../models/coaching_message.dart';
+import '../services/api_service.dart';
 import '../screens/settings_screen.dart';
 
 class HomeTab extends StatelessWidget {
@@ -30,6 +33,8 @@ class HomeTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context),
+                    const SizedBox(height: DesignTokens.space32),
+                    _buildAICoach(context),
                     const SizedBox(height: DesignTokens.space32),
                     _buildPowerStats(context),
                     const SizedBox(height: DesignTokens.space32),
@@ -136,6 +141,116 @@ class HomeTab extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildAICoach(BuildContext context) {
+    return FutureBuilder<List<CoachingMessage>>(
+      future: ApiService.getCoachingMessages(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('AI Coach', style: DesignTokens.heading1),
+              const SizedBox(height: DesignTokens.space16),
+              Center(
+                child: CircularProgressIndicator(color: DesignTokens.primary),
+              ),
+            ],
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('AI Coach', style: DesignTokens.heading1),
+              const SizedBox(height: DesignTokens.space16),
+              GlassmorphicCard(
+                padding: const EdgeInsets.all(DesignTokens.space24),
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.sparkles,
+                      color: DesignTokens.primary,
+                      size: 48,
+                    ),
+                    const SizedBox(height: DesignTokens.space16),
+                    Text(
+                      'No active coaching messages',
+                      style: DesignTokens.heading3,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: DesignTokens.space8),
+                    Text(
+                      'The AI is analyzing your study patterns.\nCheck back soon for personalized guidance.',
+                      style: DesignTokens.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: DesignTokens.space16),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await ApiService.generateCoachingMessages();
+                        // Rebuild the widget to fetch new messages
+                        (context as Element).markNeedsBuild();
+                      },
+                      icon: const Icon(LucideIcons.refreshCw, size: 18),
+                      label: const Text('Generate Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DesignTokens.primary.withOpacity(0.15),
+                        foregroundColor: DesignTokens.primary,
+                        elevation: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        final messages = snapshot.data!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('AI Coach', style: DesignTokens.heading1),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignTokens.space12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.primary.withOpacity(0.15),
+                    borderRadius: DesignTokens.borderRadiusSmall,
+                  ),
+                  child: Text(
+                    '${messages.length} active',
+                    style: DesignTokens.labelSmall.copyWith(
+                      color: DesignTokens.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignTokens.space16),
+            ...messages.map((msg) => Padding(
+              padding: const EdgeInsets.only(bottom: DesignTokens.space16),
+              child: CoachingMessageCard(
+                message: msg,
+                onDismiss: () {
+                  // Rebuild to remove dismissed message
+                  (context as Element).markNeedsBuild();
+                },
+              ),
+            )),
+          ],
+        );
+      },
     );
   }
 
