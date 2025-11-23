@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../providers/app_state.dart';
-import '../widgets/animated_blob.dart';
+import '../core/design_tokens.dart';
 import '../widgets/glassmorphic_card.dart';
 import '../widgets/exam_threat_card.dart';
 import '../screens/settings_screen.dart';
@@ -12,21 +12,18 @@ class TeacherTab extends StatelessWidget {
 
   // Mock Identity Engine Data
   Map<String, dynamic> get _identityEngine => {
-    'archetype': 'Momentum Builder',
-    'archetypeIcon': '🚀',
+    'archetype': 'Consistent Achiever',
     'confidence': 87,
-    'direction': 'Becoming more consistent',
+    'direction': 'Increasing consistency',
     'directionTrend': 'up', // up, down, stable
     'drivers': [
-      'Morning sessions (5-7 AM) with 92% completion',
-      'Strong pre-exam preparation (2 weeks ahead)',
-      'Consistent 4-day weekly rhythm',
+      'Morning sessions (5-7 AM): 92% completion rate',
+      'Pre-exam preparation: avg 14 days ahead',
+      'Weekly rhythm: 4.2 sessions/week sustained',
     ],
-    'riskTag': 'Safe',
-    'currentState': 'Drift Cycler',
-    'targetState': 'Momentum Builder',
-    'evolutionProgress': 0.65, // 65%
-    'lastChange': '3 days ago',
+    'riskTag': 'Low',
+    'strengthAreas': ['Time management', 'Planning', 'Consistency'],
+    'weakAreas': ['Concept retention', 'Active recall'],
   };
 
   // Archetype Color Schemes
@@ -85,66 +82,37 @@ class TeacherTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // BACKGROUND
-          Positioned(
-            top: -50,
-            left: -100,
-            child: AnimatedBlob(
-              color: const Color(0xFF059669).withOpacity(0.4),
-              size: 350,
+      backgroundColor: DesignTokens.backgroundPrimary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(DesignTokens.space24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: DesignTokens.space32),
+                _buildNeuralCore(context),
+                const SizedBox(height: DesignTokens.space32),
+                _buildIdentityEngine(context),
+                const SizedBox(height: DesignTokens.space32),
+                _buildStudyArchive(context),
+                const SizedBox(height: 100),
+              ],
             ),
           ),
-          Positioned(
-            bottom: 100,
-            right: -100,
-            child: AnimatedBlob(
-              color: const Color(0xFFDC2626).withOpacity(0.3),
-              size: 400,
-              duration: const Duration(seconds: 9),
-            ),
-          ),
-          
-          // MAIN CONTENT
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(context),
-                    const SizedBox(height: 40),
-                    _buildNeuralCore(context),
-                    const SizedBox(height: 40),
-                    _buildIdentityEngine(context),
-                    const SizedBox(height: 40),
-                    _buildStudyArchive(context),
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Expanded(
-          child: Text(
-            'INTEL',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
-          ),
+        Text(
+          'Intelligence Dashboard',
+          style: DesignTokens.displayLarge,
         ),
         IconButton(
           onPressed: () {
@@ -154,8 +122,8 @@ class TeacherTab extends StatelessWidget {
           },
           icon: const Icon(
             LucideIcons.settings,
-            color: Colors.white,
-            size: 24,
+            color: DesignTokens.textSecondary,
+            size: 20,
           ),
         ),
       ],
