@@ -429,79 +429,95 @@ class TeacherTab extends StatelessWidget {
               return Padding(
                 padding: EdgeInsets.only(bottom: index < missions.length - 1 ? 12 : 0),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.black.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: priorityColor.withOpacity(0.3),
+                      color: priorityColor.withOpacity(0.4),
+                      width: 1.5,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Time
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          mission['time']!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            color: priorityColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      
-                      // Task details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              mission['subject']!,
-                              style: const TextStyle(
+                      // Top row: Time + Priority
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Time badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: priorityColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: priorityColor.withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              mission['time']!,
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                                color: priorityColor,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              mission['task']!,
+                          ),
+                          
+                          // Priority badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: priorityColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: priorityColor,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              mission['priority']!,
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.grey.shade300,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: priorityColor,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 14),
+                      
+                      // Subject
+                      Text(
+                        mission['subject']!,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
                         ),
                       ),
                       
-                      // Priority badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: priorityColor,
-                            width: 1,
-                          ),
+                      const SizedBox(height: 8),
+                      
+                      // Task description
+                      Text(
+                        mission['task']!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade300,
+                          height: 1.5,
                         ),
-                        child: Text(
-                          mission['priority']!,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: priorityColor,
-                          ),
-                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
