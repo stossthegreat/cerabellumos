@@ -227,7 +227,7 @@ class _CanvasTabState extends State<CanvasTab> {
                       children: [
                         Text(
                           activeProject.emoji,
-                          style: const TextStyle(fontSize: 24),
+                          style: const TextStyle(fontSize: 22),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -237,18 +237,18 @@ class _CanvasTabState extends State<CanvasTab> {
                               Text(
                                 activeProject.name,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                'ELITE AI TUTOR',
+                                'AI Assistant',
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ],
@@ -256,20 +256,20 @@ class _CanvasTabState extends State<CanvasTab> {
                         ),
                       ],
                     )
-                  : const Row(
+                  : Row(
                       children: [
                         Icon(
-                          LucideIcons.sparkles,
-                          color: Color(0xFF8B5CF6),
-                          size: 24,
+                          LucideIcons.messageSquare,
+                          color: Colors.grey.shade600,
+                          size: 20,
                         ),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         Text(
-                          'SELECT SESSION',
+                          'Select or create a chat',
                           style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade400,
+                            fontSize: 15,
                           ),
                         ),
                       ],
@@ -501,82 +501,93 @@ class _CanvasTabState extends State<CanvasTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 100),
+            const SizedBox(height: 80),
             Container(
-              width: 100,
-              height: 100,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                ),
+                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xFF0EA5E9).withOpacity(0.15),
                 border: Border.all(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.8),
-                  width: 2,
+                  color: const Color(0xFF0EA5E9).withOpacity(0.3),
+                  width: 1,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.6),
-                    blurRadius: 30,
-                    spreadRadius: 10,
-                  ),
-                ],
               ),
               child: const Icon(
-                LucideIcons.brain,
-                color: Colors.white,
-                size: 48,
+                LucideIcons.messageSquare,
+                color: Color(0xFF0EA5E9),
+                size: 36,
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              'NEURAL INTERFACE READY',
+              'AI Study Assistant',
               style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
-              'Ask anything. I\'m locked in and ready to dominate.',
+              'Get instant help with any topic or question',
               style: TextStyle(
                 color: Colors.grey.shade400,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             ...[
-              'Destroy this chemistry topic',
-              'Quiz me until I master it',
-              'Find my weak spots NOW',
-              'Generate ultimate study plan',
-            ].map((prompt) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+              {'icon': LucideIcons.bookOpen, 'text': 'Explain this concept clearly'},
+              {'icon': LucideIcons.listChecks, 'text': 'Create practice questions'},
+              {'icon': LucideIcons.target, 'text': 'Identify knowledge gaps'},
+              {'icon': LucideIcons.zap, 'text': 'Generate study plan'},
+            ].map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: GestureDetector(
-                    onTap: () => _sendPresetMessage(prompt),
-                    child: GlassmorphicCard(
+                    onTap: () => _sendPresetMessage(item['text'] as String),
+                    child: Container(
                       padding: const EdgeInsets.all(16),
-                      borderColor: Colors.white.withOpacity(0.2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                          width: 1,
+                        ),
+                      ),
                       child: Row(
                         children: [
-                          const Icon(
-                            LucideIcons.sparkles,
-                            color: Color(0xFF8B5CF6),
-                            size: 20,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0EA5E9).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              item['icon'] as IconData,
+                              color: const Color(0xFF0EA5E9),
+                              size: 18,
+                            ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Text(
-                              prompt,
-                              style: TextStyle(
-                                color: Colors.grey.shade200,
-                                fontWeight: FontWeight.w700,
+                              item['text'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
                                 fontSize: 14,
                               ),
                             ),
+                          ),
+                          Icon(
+                            LucideIcons.arrowRight,
+                            color: Colors.grey.shade600,
+                            size: 16,
                           ),
                         ],
                       ),
