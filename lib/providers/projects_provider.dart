@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import '../services/api_service.dart';
 
 class Project {
   final String id;
@@ -167,16 +168,26 @@ class ProjectsProvider extends ChangeNotifier {
     double power = 5.0,
     bool pinned = false,
   }) async {
-    final project = Project(
-      id: _uuid.v4(),
-      name: name,
-      emoji: emoji,
-      power: power,
-      lastActive: DateTime.now(),
-      pinned: pinned,
-      momentum: '+0%',
-    );
-    await addProject(project);
+    try {
+      // Create project in backend API
+      final response = await ApiService.createProject(name, emoji);
+      
+      // Backend returns the project with an ID
+      final project = Project(
+        id: response['id'],
+        name: response['name'],
+        emoji: response['emoji'],
+        power: power,
+        lastActive: DateTime.now(),
+        pinned: pinned,
+        momentum: '+0%',
+      );
+      
+      await addProject(project);
+    } catch (e) {
+      print('❌ Error creating project: $e');
+      rethrow;
+    }
   }
 }
 
