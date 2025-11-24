@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../companion/companion_state.dart';
-import '../companion/companion_widget.dart';
+import '../companion/neural_companion_widget.dart';
 import '../core/design_tokens.dart';
 
 /// Debug screen for testing all companion states
@@ -71,7 +71,7 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CompanionWidget(
+            NeuralCompanionWidget(
               emotion: emotion,
               size: 80,
             ),
@@ -113,7 +113,7 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CompanionWidget(
+                  NeuralCompanionWidget(
                     emotion: emotion,
                     size: 200,
                   ),

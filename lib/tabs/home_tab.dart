@@ -18,7 +18,7 @@ import '../screens/settings_screen.dart';
 import '../screens/companion_debug_screen.dart';
 import '../companion/companion_state.dart';
 import '../companion/companion_emotion_engine.dart';
-import '../companion/companion_widget.dart';
+import '../companion/neural_companion_widget.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -255,7 +255,7 @@ class HomeTab extends StatelessWidget {
         padding: const EdgeInsets.all(DesignTokens.space24),
         child: Column(
           children: [
-            CompanionWidget(
+            NeuralCompanionWidget(
               emotion: emotion,
               size: 140,
             ),
