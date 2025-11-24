@@ -7,6 +7,7 @@ import 'screens/main_screen.dart';
 import 'providers/app_state.dart';
 import 'providers/study_targets_provider.dart';
 import 'providers/projects_provider.dart';
+import 'companion/companion_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class CerebellumOS extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppState()),
         ChangeNotifierProvider(create: (_) => StudyTargetsProvider()),
         ChangeNotifierProvider(create: (_) => ProjectsProvider()),
+        ChangeNotifierProvider(create: (_) => CompanionController()),
       ],
       child: MaterialApp(
         title: 'CerebellumOS',

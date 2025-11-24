@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import '../companion/companion_state.dart';
-import '../companion/study_mentor_widget.dart';
+import 'package:provider/provider.dart';
+import '../companion/expression_state.dart';
+import '../companion/behavior_state.dart';
+import '../companion/companion_controller.dart';
+import '../companion/companion_view.dart';
 import '../core/design_tokens.dart';
 
-/// Debug screen for testing all companion states
+/// Debug screen for testing all companion expressions and behaviors
 /// Access via long-press on companion widget
 class CompanionDebugScreen extends StatefulWidget {
   const CompanionDebugScreen({super.key});
@@ -13,11 +16,11 @@ class CompanionDebugScreen extends StatefulWidget {
 }
 
 class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
-  CompanionState? _selectedState;
+  ExpressionState? _selectedExpression;
 
   @override
   Widget build(BuildContext context) {
-    if (_selectedState != null) {
+    if (_selectedExpression != null) {
       return _buildFullScreenView();
     }
 
@@ -26,8 +29,8 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
       appBar: AppBar(
         backgroundColor: DesignTokens.backgroundSecondary,
         title: const Text(
-          'Companion Debug',
-          style: TextStyle(color: Colors.white),
+          'Companion Debug - Expression States',
+          style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
@@ -35,28 +38,84 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: GridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            children: CompanionState.values.map((state) {
-              return _buildStateCard(state);
-            }).toList(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Instructions
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: DesignTokens.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: DesignTokens.primary.withOpacity(0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PNG Asset Requirements',
+                      style: DesignTokens.heading3.copyWith(
+                        color: DesignTokens.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Place 6 PNG files in: assets/companion/\n'
+                      '• neutral.png\n'
+                      '• smile.png\n'
+                      '• closed_eyes.png\n'
+                      '• talking_open.png\n'
+                      '• worried.png\n'
+                      '• alert.png',
+                      style: DesignTokens.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              Text('Expression States (6)', style: DesignTokens.heading2),
+              const SizedBox(height: 16),
+              
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                children: ExpressionState.values.map((state) {
+                  return _buildExpressionCard(state);
+                }).toList(),
+              ),
+              
+              const SizedBox(height: 32),
+              
+              Text('Behavior Triggers', style: DesignTokens.heading2),
+              const SizedBox(height: 16),
+              
+              ...BehaviorState.values.map((behavior) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildBehaviorButton(behavior),
+                );
+              }),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStateCard(CompanionState state) {
-    final emotion = _getEmotionForState(state);
-    
+  Widget _buildExpressionCard(ExpressionState state) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedState = state;
+          _selectedExpression = state;
         });
       },
       child: Container(
@@ -71,28 +130,30 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            StudyMentorWidget(
-              emotion: emotion,
-              size: 80,
+            // Show the companion temporarily with this expression
+            SizedBox(
+              width: 80,
+              height: 80,
+              child: Consumer<CompanionController>(
+                builder: (context, controller, child) {
+                  // Temporarily override to show this expression
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      controller.setExpressionOverride(
+                        state,
+                        duration: const Duration(milliseconds: 100),
+                      );
+                    }
+                  });
+                  return const CompanionView(size: 80);
+                },
+              ),
             ),
             const SizedBox(height: 12),
             Text(
-              _getStateName(state),
-              style: DesignTokens.heading3,
+              ExpressionAssets.getLabel(state),
+              style: DesignTokens.heading3.copyWith(fontSize: 14),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                emotion.reason,
-                style: DesignTokens.bodySmall.copyWith(
-                  color: DesignTokens.textTertiary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
             ),
           ],
         ),
@@ -100,46 +161,75 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
     );
   }
 
+  Widget _buildBehaviorButton(BehaviorState behavior) {
+    return Consumer<CompanionController>(
+      builder: (context, controller, child) {
+        return ElevatedButton(
+          onPressed: () {
+            controller.setBehaviorState(behavior);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Triggered: ${BehaviorToExpression.getLabel(behavior)}'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: DesignTokens.backgroundSecondary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: DesignTokens.borderDefault),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.play_arrow, size: 20),
+              const SizedBox(width: 12),
+              Text(
+                BehaviorToExpression.getLabel(behavior),
+                style: DesignTokens.bodyMedium,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFullScreenView() {
-    final emotion = _getEmotionForState(_selectedState!);
-    
     return Scaffold(
       backgroundColor: DesignTokens.backgroundPrimary,
       body: SafeArea(
         child: Stack(
           children: [
-            // Full screen companion
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  StudyMentorWidget(
-                    emotion: emotion,
-                    size: 200,
+                  Consumer<CompanionController>(
+                    builder: (context, controller, child) {
+                      controller.setExpressionOverride(_selectedExpression!);
+                      return const CompanionView(size: 200);
+                    },
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    _getStateName(_selectedState!),
+                    ExpressionAssets.getLabel(_selectedExpression!),
                     style: DesignTokens.displayLarge,
                   ),
                   const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      emotion.reason,
-                      style: DesignTokens.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Text(
-                    'Intensity: ${(emotion.intensity * 100).toInt()}%',
-                    style: DesignTokens.labelMedium,
+                    'Asset: ${ExpressionAssets.getAssetPath(_selectedExpression!)}',
+                    style: DesignTokens.bodyMedium.copyWith(
+                      color: DesignTokens.textTertiary,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            // Back button
             Positioned(
               top: 16,
               left: 16,
@@ -151,7 +241,7 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
                 ),
                 onPressed: () {
                   setState(() {
-                    _selectedState = null;
+                    _selectedExpression = null;
                   });
                 },
               ),
@@ -161,71 +251,4 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
       ),
     );
   }
-
-  String _getStateName(CompanionState state) {
-    switch (state) {
-      case CompanionState.idle:
-        return 'Idle';
-      case CompanionState.focused:
-        return 'Focused';
-      case CompanionState.alert:
-        return 'Alert';
-      case CompanionState.proud:
-        return 'Proud';
-      case CompanionState.disappointed:
-        return 'Disappointed';
-      case CompanionState.curious:
-        return 'Curious';
-      case CompanionState.sleeping:
-        return 'Sleeping';
-    }
-  }
-
-  CompanionEmotionData _getEmotionForState(CompanionState state) {
-    switch (state) {
-      case CompanionState.idle:
-        return const CompanionEmotionData(
-          state: CompanionState.idle,
-          reason: 'Ready to learn together',
-          intensity: 0.5,
-        );
-      case CompanionState.focused:
-        return const CompanionEmotionData(
-          state: CompanionState.focused,
-          reason: '7 day streak! Keep going',
-          intensity: 0.8,
-        );
-      case CompanionState.alert:
-        return const CompanionEmotionData(
-          state: CompanionState.alert,
-          reason: 'Chemistry exam in 3 days!',
-          intensity: 1.0,
-        );
-      case CompanionState.proud:
-        return const CompanionEmotionData(
-          state: CompanionState.proud,
-          reason: 'You\'re crushing it! 90 mins studied',
-          intensity: 0.95,
-        );
-      case CompanionState.disappointed:
-        return const CompanionEmotionData(
-          state: CompanionState.disappointed,
-          reason: 'Haven\'t started studying yet...',
-          intensity: 0.4,
-        );
-      case CompanionState.curious:
-        return const CompanionEmotionData(
-          state: CompanionState.curious,
-          reason: 'What should we learn today?',
-          intensity: 0.7,
-        );
-      case CompanionState.sleeping:
-        return const CompanionEmotionData(
-          state: CompanionState.sleeping,
-          reason: 'Resting for tomorrow\'s focus',
-          intensity: 0.3,
-        );
-    }
-  }
 }
-

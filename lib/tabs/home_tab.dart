@@ -16,9 +16,8 @@ import '../models/coaching_message.dart';
 import '../services/api_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/companion_debug_screen.dart';
-import '../companion/companion_state.dart';
-import '../companion/companion_emotion_engine.dart';
-import '../companion/study_mentor_widget.dart';
+import '../companion/companion_view.dart';
+import '../companion/companion_controller.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -231,14 +230,14 @@ class HomeTab extends StatelessWidget {
 
   Widget _buildCompanion(BuildContext context) {
     final appState = context.watch<AppState>();
-    final targetsProvider = context.watch<StudyTargetsProvider>();
+    final controller = context.read<CompanionController>();
     
-    final emotion = CompanionEmotionEngine.analyze(
-      streak: appState.userData['streak'] as int,
+    // Update companion state based on app data
+    controller.updateFromAppState(
       todayMinutes: appState.userData['todayMinutes'] as int,
+      streak: appState.userData['streak'] as int,
       exams: appState.exams,
       hour: DateTime.now().hour,
-      targets: targetsProvider.targets,
     );
     
     return GestureDetector(
@@ -253,50 +252,22 @@ class HomeTab extends StatelessWidget {
       },
       child: GlassmorphicCard(
         padding: const EdgeInsets.all(DesignTokens.space24),
-        child: Column(
+        child: const Column(
           children: [
-            StudyMentorWidget(
-              emotion: emotion,
-              size: 140,
-            ),
-            const SizedBox(height: DesignTokens.space16),
+            CompanionView(size: 140),
+            SizedBox(height: DesignTokens.space16),
             Text(
-              emotion.reason,
-              style: DesignTokens.bodyMedium.copyWith(
-                color: DesignTokens.textSecondary,
+              'Long-press for debug',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DesignTokens.space8),
-            Text(
-              _getStateLabel(emotion.state),
-              style: DesignTokens.labelSmall.copyWith(
-                color: DesignTokens.textTertiary,
-              ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _getStateLabel(CompanionState state) {
-    switch (state) {
-      case CompanionState.idle:
-        return 'Ready';
-      case CompanionState.focused:
-        return 'Focused';
-      case CompanionState.alert:
-        return 'Alert';
-      case CompanionState.proud:
-        return 'Proud';
-      case CompanionState.disappointed:
-        return 'Needs attention';
-      case CompanionState.curious:
-        return 'Curious';
-      case CompanionState.sleeping:
-        return 'Resting';
-    }
   }
 
   Widget _buildAICoach(BuildContext context) {
