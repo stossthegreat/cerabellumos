@@ -1,125 +1,130 @@
-// src/services/voice.service.ts
 import axios from "axios";
-import crypto from "crypto";
-import { prisma } from "../utils/db";
+import { ENV } from "../utils/env";
 
-// Optional S3 upload (recommended for serving audio); if you prefer CDN or local FS, adapt here.
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+/**
+ * Voice Service - Eleven Labs TTS Integration
+ * 
+ * Generates natural speech for the Study OS companion.
+ * Different voice settings for different emotional contexts.
+ */
 
-const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY || "";
-const ELEVEN_TTS_TIMEOUT_MS = Number(process.env.ELEVENLABS_TTS_TIMEOUT_MS || 10000);
-
-// map mentor -> voiceId via env
-const VOICES: Record<string, string | undefined> = {
-  strict: process.env.ELEVENLABS_VOICE_STRICT,
-  balanced: process.env.ELEVENLABS_VOICE_BALANCED,
-  light: process.env.ELEVENLABS_VOICE_LIGHT,
-  marcus: process.env.ELEVENLABS_VOICE_MARCUS,
-  drill: process.env.ELEVENLABS_VOICE_DRILL,
-  confucius: process.env.ELEVENLABS_VOICE_CONFUCIUS,
-  lincoln: process.env.ELEVENLABS_VOICE_LINCOLN,
-  buddha: process.env.ELEVENLABS_VOICE_BUDDHA,
-};
-
-const S3_ENDPOINT = process.env.S3_ENDPOINT || "";
-const S3_BUCKET = process.env.S3_BUCKET || "";
-const S3_ACCESS_KEY = process.env.S3_ACCESS_KEY || "";
-const S3_SECRET_KEY = process.env.S3_SECRET_KEY || "";
-
-const s3 =
-  S3_BUCKET && S3_ACCESS_KEY && S3_SECRET_KEY
-    ? new S3Client({
-        region: "auto",
-        endpoint: S3_ENDPOINT || undefined,
-        forcePathStyle: !!S3_ENDPOINT,
-        credentials: { accessKeyId: S3_ACCESS_KEY, secretAccessKey: S3_SECRET_KEY },
-      })
-    : null;
+export type VoiceEmotion = "calm" | "urgent" | "hype" | "encouraging";
 
 export class VoiceService {
-  /**
-   * Main: get TTS audio URL for a mentor/voice + text, with real caching.
-   */
-  async speak(userId: string, text: string, voiceKey: string) {
-    if (!ELEVEN_API_KEY) throw new Error("ELEVENLABS_API_KEY missing");
-    const voiceId = VOICES[voiceKey] || VOICES["balanced"];
-    if (!voiceId) throw new Error(`Voice not configured for key "${voiceKey}"`);
+  private apiKey: string;
+  private voiceId: string;
+  private baseUrl = "https://api.elevenlabs.io/v1";
 
-    const cacheKey = this.hash(text + "|" + voiceId);
-    const existing = await prisma.voiceCache.findUnique({ where: { id: cacheKey } });
-    if (existing?.url) {
-      // Log hit
-      await prisma.event.create({
-        data: { userId, type: "voice_cache_hit", payload: { id: cacheKey, voiceKey } },
-      });
-      return { url: existing.url, cached: true };
+  constructor() {
+    this.apiKey = ENV.ELEVENLABS_API_KEY || "";
+    this.voiceId = ENV.ELEVENLABS_VOICE_ID || "";
+
+    if (!this.apiKey || !this.voiceId) {
+      console.warn("⚠️ Eleven Labs not configured. Voice features disabled.");
+    }
+  }
+
+  /**
+   * Generate speech from text with emotional context
+   */
+  async generateSpeech(
+    text: string,
+    emotion: VoiceEmotion = "calm"
+  ): Promise<Buffer | null> {
+    if (!this.apiKey || !this.voiceId) {
+      console.log("⚠️ Eleven Labs not configured, skipping TTS");
+      return null;
     }
 
-    // Call ElevenLabs
-    const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
-    const resp = await axios.post(
-      url,
-      {
-        text,
-        model_id: "eleven_monolingual_v1",
-        voice_settings: { similarity_boost: 0.7, stability: 0.45, style: 0.0, use_speaker_boost: true },
-      },
-      {
-        responseType: "arraybuffer",
-        timeout: ELEVEN_TTS_TIMEOUT_MS,
-        headers: {
-          "xi-api-key": ELEVEN_API_KEY,
-          "Content-Type": "application/json",
-          "Accept": "audio/mpeg",
+    try {
+      console.log(`🎤 Generating speech (${emotion}): "${text.substring(0, 50)}..."`);
+
+      const response = await axios.post(
+        `${this.baseUrl}/text-to-speech/${this.voiceId}`,
+        {
+          text,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: this.getVoiceSettings(emotion),
         },
-      }
-    );
-
-    // Upload to S3-compatible storage (recommended)
-    let publicUrl: string;
-    if (s3 && S3_BUCKET) {
-      const objectKey = `voice/${cacheKey}.mp3`;
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: S3_BUCKET,
-          Key: objectKey,
-          Body: Buffer.from(resp.data),
-          ContentType: "audio/mpeg",
-          ACL: "public-read",
-        })
+        {
+          headers: {
+            "xi-api-key": this.apiKey,
+            "Content-Type": "application/json",
+          },
+          responseType: "arraybuffer",
+        }
       );
-      // Construct URL (for S3: https://{bucket}.s3.amazonaws.com/{key}; for MinIO: endpoint/bucket/key)
-      publicUrl = S3_ENDPOINT
-        ? `${S3_ENDPOINT.replace(/\/$/, "")}/${S3_BUCKET}/${objectKey}`
-        : `https://${S3_BUCKET}.s3.amazonaws.com/${objectKey}`;
-    } else {
-      // Fallback: store data URI in DB (works but not ideal for production)
-      const b64 = Buffer.from(resp.data).toString("base64");
-      publicUrl = `data:audio/mpeg;base64,${b64}`;
+
+      console.log(`✅ Speech generated successfully (${response.data.byteLength} bytes)`);
+      return Buffer.from(response.data);
+    } catch (error: any) {
+      console.error("❌ Eleven Labs TTS error:", error.message);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+      }
+      return null;
     }
-
-    // Save cache
-    await prisma.voiceCache.create({
-      data: { id: cacheKey, text, voice: voiceKey, url: publicUrl },
-    });
-
-    await prisma.event.create({
-      data: { userId, type: "voice_generated", payload: { cacheKey, voiceKey, bytes: resp.data?.length || 0 } },
-    });
-
-    return { url: publicUrl, cached: false };
   }
 
   /**
-   * Alias for speak() that returns just the URL string (backward compatibility)
+   * Get voice settings based on emotional context
    */
-  async ttsToUrl(userId: string, text: string, voiceKey: string): Promise<string> {
-    const result = await this.speak(userId, text, voiceKey);
-    return result.url;
+  private getVoiceSettings(emotion: VoiceEmotion) {
+    switch (emotion) {
+      case "calm":
+        return {
+          stability: 0.75,
+          similarity_boost: 0.75,
+          style: 0.0,
+          use_speaker_boost: true,
+        };
+
+      case "urgent":
+        return {
+          stability: 0.5,
+          similarity_boost: 0.8,
+          style: 0.4,
+          use_speaker_boost: true,
+        };
+
+      case "hype":
+        return {
+          stability: 0.4,
+          similarity_boost: 0.85,
+          style: 0.6,
+          use_speaker_boost: true,
+        };
+
+      case "encouraging":
+        return {
+          stability: 0.65,
+          similarity_boost: 0.8,
+          style: 0.2,
+          use_speaker_boost: true,
+        };
+
+      default:
+        return {
+          stability: 0.75,
+          similarity_boost: 0.75,
+          style: 0.0,
+          use_speaker_boost: true,
+        };
+    }
   }
 
-  private hash(s: string) {
-    return crypto.createHash("sha256").update(s).digest("hex").slice(0, 40);
+  /**
+   * Convert audio buffer to base64 for mobile transmission
+   */
+  bufferToBase64(buffer: Buffer): string {
+    return buffer.toString("base64");
+  }
+
+  /**
+   * Check if voice service is configured
+   */
+  isConfigured(): boolean {
+    return !!(this.apiKey && this.voiceId);
   }
 }
 

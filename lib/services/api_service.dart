@@ -257,5 +257,65 @@ class ApiService {
       print('❌ Failed to generate coaching messages: ${response.body}');
     }
   }
+
+  // ============================================================
+  // COMPANION (Voice & Welcome Messages)
+  // ============================================================
+
+  /// Get personalized welcome message with voice
+  static Future<Map<String, dynamic>?> getWelcomeMessage() async {
+    try {
+      final headers = await _getHeaders();
+      final hour = DateTime.now().hour;
+      
+      print('🎤 Fetching welcome message...');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/companion/welcome?hour=$hour'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Welcome message received: ${data['text']?.substring(0, 50)}...');
+        return data;
+      } else {
+        print('❌ Failed to get welcome message: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Error fetching welcome message: $e');
+      return null;
+    }
+  }
+
+  /// Generate TTS for any text (testing/custom messages)
+  static Future<Map<String, dynamic>?> speakText({
+    required String text,
+    String emotion = 'calm',
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/companion/speak'),
+        headers: headers,
+        body: json.encode({
+          'text': text,
+          'emotion': emotion,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('❌ Failed to speak text: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Error in speakText: $e');
+      return null;
+    }
+  }
 }
 

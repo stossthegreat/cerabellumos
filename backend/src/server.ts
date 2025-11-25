@@ -30,6 +30,7 @@ import { identityController } from "./controllers/identity.controller";
 import { quizController } from "./controllers/quiz.controller";
 import { flashcardsController } from "./controllers/flashcards.controller";
 import { coachingRoutes } from "./routes/coaching.routes";
+import { companionRoutes } from "./routes/companion.routes";
 
 // Legacy controllers (keeping for now, can remove later)
 // import { whatIfController } from "./controllers/whatif.controller";
@@ -163,6 +164,7 @@ const buildServer = () => {
     protectedRoutes.register(quizController);           // Quiz generation
     protectedRoutes.register(flashcardsController);     // Flashcard generation & spaced repetition
     protectedRoutes.register(coachingRoutes);           // Smart coaching messages
+    protectedRoutes.register(companionRoutes);          // 🎤 Companion voice & welcome messages
   });
   
   // Test routes (optional - can be public or protected based on needs)

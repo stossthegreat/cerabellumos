@@ -18,9 +18,102 @@ import '../screens/settings_screen.dart';
 import '../screens/companion_debug_screen.dart';
 import '../companion/companion_view.dart';
 import '../companion/companion_controller.dart';
+import '../services/audio_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  bool _hasPlayedWelcome = false;
+  final Set<String> _playedCoachingMessages = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _playWelcomeMessage();
+  }
+
+  /// Play welcome message on first open of the day
+  Future<void> _playWelcomeMessage() async {
+    if (_hasPlayedWelcome) return;
+
+    try {
+      // Check if we've already played welcome today
+      final prefs = await SharedPreferences.getInstance();
+      final lastWelcomeDate = prefs.getString('last_welcome_date');
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+
+      if (lastWelcomeDate == today) {
+        print('🎤 Welcome message already played today');
+        return;
+      }
+
+      // Wait a bit for UI to settle
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Get welcome message from backend
+      final welcomeData = await ApiService.getWelcomeMessage();
+      if (welcomeData == null || welcomeData['audioBase64'] == null) {
+        print('⚠️ No audio in welcome message');
+        return;
+      }
+
+      // Play the welcome message
+      if (mounted) {
+        final companion = context.read<CompanionController>();
+        await AudioService().playVoiceMessage(
+          audioBase64: welcomeData['audioBase64'],
+          text: welcomeData['text'] ?? 'Welcome!',
+          companion: companion,
+        );
+      }
+
+      // Mark as played for today
+      await prefs.setString('last_welcome_date', today);
+      _hasPlayedWelcome = true;
+    } catch (e) {
+      print('❌ Error playing welcome message: $e');
+    }
+  }
+
+  /// Auto-play first unheard coaching message
+  Future<void> _playCoachingMessage(List<CoachingMessage> messages) async {
+    if (messages.isEmpty) return;
+
+    // Find first message we haven't played yet
+    for (final msg in messages) {
+      if (_playedCoachingMessages.contains(msg.id)) continue;
+
+      // Check if this message has audio
+      final content = msg.content;
+      if (content['audioBase64'] == null) {
+        _playedCoachingMessages.add(msg.id);
+        continue;
+      }
+
+      // Play this message
+      try {
+        if (mounted) {
+          final companion = context.read<CompanionController>();
+          await AudioService().playVoiceMessage(
+            audioBase64: content['audioBase64'],
+            text: content['plan']?['description'] ?? msg.title,
+            companion: companion,
+          );
+        }
+        _playedCoachingMessages.add(msg.id);
+        return; // Only play one message at a time
+      } catch (e) {
+        print('❌ Error playing coaching message: $e');
+        _playedCoachingMessages.add(msg.id);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -337,6 +430,12 @@ class HomeTab extends StatelessWidget {
         }
 
         final messages = snapshot.data!;
+        
+        // Auto-play first unheard message
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _playCoachingMessage(messages);
+        });
+        
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

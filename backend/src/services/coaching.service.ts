@@ -4,6 +4,7 @@
 import { prisma } from "../utils/db";
 import { buildUserIntelState } from "./intel/buildUserIntelState";
 import { UserIntelState } from "./intel/types";
+import { voiceService, VoiceEmotion } from "./voice.service";
 
 export interface CoachingAction {
   type: string; // "flashcards", "quiz", "deep_dive", "scan", "video", "quick_review"
@@ -380,9 +381,26 @@ class CoachingService {
       },
     });
 
-    // Store new messages
+    // Store new messages with voice generation
     for (const msg of messages) {
       const expiresAt = this.calculateExpiration(msg.type);
+      
+      // Generate voice for this message
+      let audioBase64 = null;
+      if (voiceService.isConfigured()) {
+        const voiceText = this.getVoiceText(msg);
+        const emotion = this.getVoiceEmotion(msg);
+        const audioBuffer = await voiceService.generateSpeech(voiceText, emotion);
+        if (audioBuffer) {
+          audioBase64 = voiceService.bufferToBase64(audioBuffer);
+        }
+      }
+      
+      // Add audio to message content
+      const contentWithAudio = {
+        ...msg,
+        audioBase64,
+      };
       
       await prisma.coachingMessage.create({
         data: {
@@ -390,12 +408,39 @@ class CoachingService {
           type: msg.type,
           priority: msg.priority,
           title: msg.title,
-          content: msg as any, // Cast to any for Prisma Json type compatibility
+          content: contentWithAudio as any, // Cast to any for Prisma Json type compatibility
           status: "active",
           expiresAt,
         },
       });
     }
+  }
+
+  /**
+   * Get voice text from coaching message
+   */
+  private getVoiceText(msg: CoachingMessageData): string {
+    // Use plan description for voice
+    return `${msg.title}. ${msg.plan.description}`;
+  }
+
+  /**
+   * Get voice emotion based on message type and priority
+   */
+  private getVoiceEmotion(msg: CoachingMessageData): VoiceEmotion {
+    if (msg.priority === "high" && msg.type === "exam_prep") {
+      return "urgent";
+    }
+    if (msg.priority === "high" && msg.type === "drift_recovery") {
+      return "urgent";
+    }
+    if (msg.type === "momentum") {
+      return "hype";
+    }
+    if (msg.type === "consistency") {
+      return "encouraging";
+    }
+    return "calm";
   }
 
   /**
