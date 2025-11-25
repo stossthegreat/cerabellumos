@@ -38,7 +38,7 @@ export async function getWelcomeMessage(
           take: 3,
           orderBy: { endDate: "asc" },
         },
-        sessions: {
+        studySessions: {
           where: {
             createdAt: {
               gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
@@ -141,7 +141,7 @@ function generateWelcomeText(
   else greeting = "Still up? Let's make it count";
 
   // Get study context
-  const todayMinutes = user?.sessions?.[0]?.durationMinutes || 0;
+  const todayMinutes = user?.studySessions?.[0]?.durationMinutes || 0;
   const activeTargets = user?.studyTargets || [];
   const urgentTargets = activeTargets.filter((t: any) => {
     const daysUntilEnd = Math.ceil((new Date(t.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
