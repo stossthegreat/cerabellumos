@@ -6,14 +6,11 @@ import { authMiddleware } from "../middleware/auth.middleware";
  * Companion Routes - Voice messages and companion interactions
  */
 export async function companionRoutes(fastify: FastifyInstance) {
-  // Apply auth middleware to all routes
-  fastify.addHook("preHandler", authMiddleware);
+  // GET /api/companion/welcome - Get personalized welcome message with voice
+  fastify.get("/api/companion/welcome", getWelcomeMessage);
 
-  // GET /companion/welcome - Get personalized welcome message with voice
-  fastify.get("/welcome", getWelcomeMessage);
-
-  // POST /companion/speak - Generate TTS for any text (testing/custom messages)
-  fastify.post("/speak", speakText);
+  // POST /api/companion/speak - Generate TTS for any text (testing/custom messages)
+  fastify.post("/api/companion/speak", speakText);
 
   console.log("✅ Companion routes registered");
 }

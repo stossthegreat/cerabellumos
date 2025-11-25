@@ -24,6 +24,7 @@ class CompanionController extends ChangeNotifier {
   bool get isTalking => _isTalking;
 
   CompanionController() {
+    print('👁️ Companion controller initialized - starting auto-blink');
     _startBlinkingLoop();
   }
 
@@ -93,11 +94,12 @@ class CompanionController extends ChangeNotifier {
     _scheduleNextBlink();
   }
 
-  /// Internal: Schedule next blink (random 4-7 seconds)
+  /// Internal: Schedule next blink (random 2-4 seconds for visibility)
   void _scheduleNextBlink() {
     if (_isTalking || _isBlinking) return;
     
-    final nextBlinkDelay = Duration(seconds: 4 + _random.nextInt(4)); // 4-7 seconds
+    final nextBlinkDelay = Duration(seconds: 2 + _random.nextInt(3)); // 2-4 seconds (more frequent for testing)
+    print('👁️ Next blink scheduled in ${nextBlinkDelay.inSeconds} seconds');
     
     _blinkTimer = Timer(nextBlinkDelay, () {
       _performBlink();
@@ -107,10 +109,12 @@ class CompanionController extends ChangeNotifier {
   /// Internal: Perform blink sequence
   void _performBlink() {
     if (_isTalking) {
+      print('👁️ Skipping blink - companion is talking');
       _scheduleNextBlink();
       return;
     }
     
+    print('👁️ Performing blink animation');
     _isBlinking = true;
     final previousState = _currentState;
     
@@ -129,6 +133,7 @@ class CompanionController extends ChangeNotifier {
         _isBlinking = false;
         _currentState = previousState;
         notifyListeners();
+        print('👁️ Blink complete, back to ${previousState.toString().split('.').last}');
         _scheduleNextBlink(); // Schedule next blink
         return;
       }

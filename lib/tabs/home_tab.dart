@@ -44,6 +44,8 @@ class _HomeTabState extends State<HomeTab> {
     if (_hasPlayedWelcome) return;
 
     try {
+      print('🎤 Attempting to play welcome message...');
+      
       // Check if we've already played welcome today
       final prefs = await SharedPreferences.getInstance();
       final lastWelcomeDate = prefs.getString('last_welcome_date');
@@ -55,28 +57,56 @@ class _HomeTabState extends State<HomeTab> {
       }
 
       // Wait a bit for UI to settle
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 2000));
 
-      // Get welcome message from backend
+      if (!mounted) return;
+
+      // Get companion controller
+      final companion = context.read<CompanionController>();
+
+      // Try to get welcome message from backend
+      print('🎤 Fetching welcome message from backend...');
       final welcomeData = await ApiService.getWelcomeMessage();
-      if (welcomeData == null || welcomeData['audioBase64'] == null) {
-        print('⚠️ No audio in welcome message');
+      
+      if (welcomeData == null) {
+        print('⚠️ Backend not responding - showing default welcome');
+        // Show default welcome animation (no audio)
+        await companion.triggerTalk('Welcome to Study OS! Ready to dominate today?');
+        await prefs.setString('last_welcome_date', today);
+        _hasPlayedWelcome = true;
         return;
       }
 
+      print('✅ Welcome message received: ${welcomeData['text']?.substring(0, 50)}...');
+      print('🎤 Audio present: ${welcomeData['audioBase64'] != null}');
+
       // Play the welcome message
       if (mounted) {
-        final companion = context.read<CompanionController>();
-        await AudioService().playVoiceMessage(
-          audioBase64: welcomeData['audioBase64'],
-          text: welcomeData['text'] ?? 'Welcome!',
-          companion: companion,
-        );
+        if (welcomeData['audioBase64'] != null) {
+          // Play with audio
+          print('🎤 Playing voice message with audio...');
+          try {
+            await AudioService().playVoiceMessage(
+              audioBase64: welcomeData['audioBase64'],
+              text: welcomeData['text'] ?? 'Welcome!',
+              companion: companion,
+            );
+          } catch (e) {
+            print('❌ Audio playback failed: $e');
+            // Fallback to animation only
+            await companion.triggerTalk(welcomeData['text'] ?? 'Welcome!');
+          }
+        } else {
+          // No audio from backend (Eleven Labs not configured), just animate
+          print('🎤 Eleven Labs not configured - showing talking animation only');
+          await companion.triggerTalk(welcomeData['text'] ?? 'Welcome!');
+        }
       }
 
       // Mark as played for today
       await prefs.setString('last_welcome_date', today);
       _hasPlayedWelcome = true;
+      print('✅ Welcome message complete');
     } catch (e) {
       print('❌ Error playing welcome message: $e');
     }

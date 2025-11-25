@@ -37,15 +37,55 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
         ),
         actions: [
           // Test talking animation
-          IconButton(
-            icon: const Icon(Icons.volume_up, color: Colors.white),
-            onPressed: () {
-              final controller = context.read<CompanionController>();
-              if (controller.isTalking) {
-                controller.stopTalking();
-              } else {
-                controller.startTalking();
-              }
+          Consumer<CompanionController>(
+            builder: (context, controller, child) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Blinking indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Auto-Blink',
+                          style: TextStyle(fontSize: 11, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Talking button
+                  IconButton(
+                    icon: Icon(
+                      controller.isTalking ? Icons.volume_off : Icons.volume_up,
+                      color: controller.isTalking ? Colors.green : Colors.white,
+                    ),
+                    onPressed: () {
+                      if (controller.isTalking) {
+                        controller.stopTalking();
+                      } else {
+                        controller.startTalking();
+                      }
+                    },
+                  ),
+                ],
+              );
             },
           ),
         ],
