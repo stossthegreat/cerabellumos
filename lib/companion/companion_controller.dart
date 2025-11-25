@@ -29,10 +29,16 @@ class CompanionController extends ChangeNotifier {
   }
 
   /// Set emotion/expression state manually
+  /// Called by emotion engine to update based on app state
   void setEmotion(CompanionState state) {
     if (_isTalking || _isBlinking) return; // Don't interrupt animations
-    _currentState = state;
-    notifyListeners();
+    
+    // Only update if state actually changed (avoid unnecessary rebuilds)
+    if (_currentState != state) {
+      print('😊 Companion emotion changed: ${state.toString().split('.').last}');
+      _currentState = state;
+      notifyListeners();
+    }
   }
 
   /// Start talking animation

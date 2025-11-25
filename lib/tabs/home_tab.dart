@@ -19,6 +19,7 @@ import '../screens/companion_debug_screen.dart';
 import '../companion/companion_avatar.dart';
 import '../companion/companion_state.dart';
 import '../companion/companion_controller.dart';
+import '../companion/companion_emotion_engine.dart';
 import '../services/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -352,6 +353,26 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildCompanion(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final targetsProvider = context.watch<StudyTargetsProvider>();
+    final controller = context.watch<CompanionController>();
+    
+    // Analyze app state to determine companion emotion
+    final emotion = CompanionEmotionEngine.analyze(
+      todayMinutes: appState.userData['todayMinutes'] as int,
+      streak: appState.userData['streak'] as int,
+      exams: appState.exams,
+      hour: DateTime.now().hour,
+      targets: targetsProvider.targets,
+    );
+    
+    // Update companion state if not currently talking or blinking
+    if (!controller.isTalking) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.setEmotion(emotion.state);
+      });
+    }
+    
     return GestureDetector(
       onLongPress: () {
         // Long press to open debug screen
@@ -366,20 +387,27 @@ class _HomeTabState extends State<HomeTab> {
         padding: const EdgeInsets.all(DesignTokens.space24),
         child: Column(
           children: [
-            Consumer<CompanionController>(
-              builder: (context, controller, child) {
-                return CompanionAvatar(
-                  state: controller.currentState,
-                  size: 140,
-                );
-              },
+            CompanionAvatar(
+              state: controller.currentState,
+              size: 140,
             ),
             const SizedBox(height: DesignTokens.space16),
-            const Text(
-              'Long-press for debug',
-              style: TextStyle(
-                fontSize: 12,
+            Text(
+              emotion.reason,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFFE2E8F0),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DesignTokens.space8),
+            Text(
+              emotion.category.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
                 color: Color(0xFF64748B),
+                letterSpacing: 1.2,
               ),
               textAlign: TextAlign.center,
             ),
