@@ -91,8 +91,7 @@ class _HomeTabState extends State<HomeTab> {
       if (_playedCoachingMessages.contains(msg.id)) continue;
 
       // Check if this message has audio
-      final content = msg.content;
-      if (content['audioBase64'] == null) {
+      if (msg.audioBase64 == null) {
         _playedCoachingMessages.add(msg.id);
         continue;
       }
@@ -102,8 +101,8 @@ class _HomeTabState extends State<HomeTab> {
         if (mounted) {
           final companion = context.read<CompanionController>();
           await AudioService().playVoiceMessage(
-            audioBase64: content['audioBase64'],
-            text: content['plan']?['description'] ?? msg.title,
+            audioBase64: msg.audioBase64!,
+            text: msg.plan.description,
             companion: companion,
           );
         }

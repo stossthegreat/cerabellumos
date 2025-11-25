@@ -81,6 +81,7 @@ class CoachingMessage {
   final DateTime expiresAt;
   final DateTime createdAt;
   final DateTime? readAt;
+  final String? audioBase64; // Voice audio for this message
 
   CoachingMessage({
     required this.id,
@@ -96,6 +97,7 @@ class CoachingMessage {
     required this.expiresAt,
     required this.createdAt,
     this.readAt,
+    this.audioBase64,
   });
 
   factory CoachingMessage.fromJson(Map<String, dynamic> json) {
@@ -120,6 +122,7 @@ class CoachingMessage {
       expiresAt: DateTime.parse(json['expiresAt'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       readAt: json['readAt'] != null ? DateTime.parse(json['readAt'] as String) : null,
+      audioBase64: content['audioBase64'] as String?, // Extract audio from content
     );
   }
 }
