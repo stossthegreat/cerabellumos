@@ -1,5 +1,5 @@
 import 'companion_state.dart';
-import '../models/study_target.dart';
+import '../providers/study_targets_provider.dart';
 
 /// Companion Emotion Engine
 /// 
@@ -22,9 +22,10 @@ class CompanionEmotionEngine {
       return daysLeft <= 7 && daysLeft >= 0;
     }).toList();
 
+    // Filter urgent targets
     final urgentTargets = targets.where((t) {
       final daysLeft = t.endDate.difference(DateTime.now()).inDays;
-      return !t.completed && daysLeft <= 3 && daysLeft >= 0;
+      return !t.isCompleted && daysLeft <= 3 && daysLeft >= 0;
     }).toList();
 
     // ================================================================
