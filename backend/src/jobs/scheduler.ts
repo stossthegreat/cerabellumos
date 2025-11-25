@@ -275,12 +275,8 @@ async function runEveningDebrief(userId: string) {
     (await aiService.generateEveningDebrief(userId).catch(() => null)) ||
     "Evening debrief.";
 
+  // TTS disabled for now (legacy code from Future You OS)
   let audioUrl: string | null = null;
-  try {
-    audioUrl = await voiceService.ttsToUrl(userId, text, "future-you");
-  } catch {
-    audioUrl = null;
-  }
 
   // Store as CoachMessage (kind = mirror)
   await coachMessageService.createMessage(userId, "mirror", text, { audioUrl });

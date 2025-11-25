@@ -33,9 +33,10 @@ export async function getWelcomeMessage(
       include: {
         studyTargets: {
           where: {
-            status: { in: ["at_risk", "struggling"] },
+            completed: false,
           },
           take: 3,
+          orderBy: { endDate: "asc" },
         },
         sessions: {
           where: {
@@ -141,11 +142,14 @@ function generateWelcomeText(
 
   // Get study context
   const todayMinutes = user?.sessions?.[0]?.durationMinutes || 0;
-  const atRiskTopics = user?.studyTargets?.filter((t: any) => t.status === "at_risk") || [];
-  const strugglingTopics = user?.studyTargets?.filter((t: any) => t.status === "struggling") || [];
+  const activeTargets = user?.studyTargets || [];
+  const urgentTargets = activeTargets.filter((t: any) => {
+    const daysUntilEnd = Math.ceil((new Date(t.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return daysUntilEnd <= 3 && daysUntilEnd >= 0;
+  });
 
   // FIRST TIME / NO DATA
-  if (!user || (!todayMinutes && atRiskTopics.length === 0)) {
+  if (!user || (!todayMinutes && urgentTargets.length === 0)) {
     return {
       text: `${greeting}. Ready to dominate today? I'll be tracking your patterns and helping you get that edge. Let's start strong.`,
       emotion: "encouraging",
@@ -160,20 +164,20 @@ function generateWelcomeText(
     };
   }
 
-  // AT-RISK TOPICS DETECTED
-  if (atRiskTopics.length > 0) {
-    const topicNames = atRiskTopics.slice(0, 2).map((t: any) => t.name).join(" and ");
+  // URGENT TARGETS DETECTED
+  if (urgentTargets.length > 0) {
+    const targetNames = urgentTargets.slice(0, 2).map((t: any) => t.title).join(" and ");
     return {
-      text: `${greeting}. Real talk: ${topicNames} needs attention. You're at risk of falling behind. Let's fix that today before it becomes a problem.`,
+      text: `${greeting}. Real talk: ${targetNames} deadline is close. Let's lock in and finish strong. No excuses, just execution.`,
       emotion: "urgent",
     };
   }
 
-  // STRUGGLING TOPICS
-  if (strugglingTopics.length > 0) {
-    const topicName = strugglingTopics[0].name;
+  // ACTIVE TARGETS
+  if (activeTargets.length > 0) {
+    const targetName = activeTargets[0].title;
     return {
-      text: `${greeting}. I see you're working on ${topicName}. It's challenging, but you're making progress. Let's break it down and master it step by step.`,
+      text: `${greeting}. You're working on ${targetName}. Let's make real progress today. One step at a time, we got this.`,
       emotion: "encouraging",
     };
   }
