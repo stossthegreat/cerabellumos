@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../companion/expression_state.dart';
-import '../companion/behavior_state.dart';
+import '../companion/companion_state.dart';
+import '../companion/companion_avatar.dart';
 import '../companion/companion_controller.dart';
-import '../companion/companion_view.dart';
 import '../core/design_tokens.dart';
 
-/// Debug screen for testing all companion expressions and behaviors
+/// Debug screen for testing all 18 companion states
 /// Access via long-press on companion widget
 class CompanionDebugScreen extends StatefulWidget {
   const CompanionDebugScreen({super.key});
@@ -16,11 +15,11 @@ class CompanionDebugScreen extends StatefulWidget {
 }
 
 class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
-  ExpressionState? _selectedExpression;
+  CompanionState? _selectedState;
 
   @override
   Widget build(BuildContext context) {
-    if (_selectedExpression != null) {
+    if (_selectedState != null) {
       return _buildFullScreenView();
     }
 
@@ -29,13 +28,27 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
       appBar: AppBar(
         backgroundColor: DesignTokens.backgroundSecondary,
         title: const Text(
-          'Companion Debug - Expression States',
+          'Companion Debug - 18 States',
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          // Test talking animation
+          IconButton(
+            icon: const Icon(Icons.volume_up, color: Colors.white),
+            onPressed: () {
+              final controller = context.read<CompanionController>();
+              if (controller.isTalking) {
+                controller.stopTalking();
+              } else {
+                controller.startTalking();
+              }
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -43,7 +56,7 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Instructions
+              // Info card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -57,20 +70,16 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'PNG Asset Requirements',
+                      '18 Companion States Loaded ✅',
                       style: DesignTokens.heading3.copyWith(
                         color: DesignTokens.primary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Place 6 PNG files in: assets/companion/\n'
-                      '• neutral.png\n'
-                      '• smile.png\n'
-                      '• closed_eyes.png\n'
-                      '• talking_open.png\n'
-                      '• worried.png\n'
-                      '• alert.png',
+                      'All images from assets/companion/\n'
+                      'Tap any state to preview full screen\n'
+                      'Volume icon = test talking animation',
                       style: DesignTokens.bodySmall,
                     ),
                   ],
@@ -79,31 +88,49 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
               
               const SizedBox(height: 24),
               
-              Text('Expression States (6)', style: DesignTokens.heading2),
+              // State categories
+              _buildStateCategory('Default', [CompanionState.neutral_default]),
               const SizedBox(height: 16),
               
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                children: ExpressionState.values.map((state) {
-                  return _buildExpressionCard(state);
-                }).toList(),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              Text('Behavior Triggers', style: DesignTokens.heading2),
+              _buildStateCategory('Mouth A (4)', [
+                CompanionState.mouth_A_1,
+                CompanionState.mouth_A_2,
+                CompanionState.mouth_A_3,
+                CompanionState.mouth_A_4,
+              ]),
               const SizedBox(height: 16),
               
-              ...BehaviorState.values.map((behavior) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildBehaviorButton(behavior),
-                );
-              }),
+              _buildStateCategory('Mouth O (2)', [
+                CompanionState.mouth_O_1,
+                CompanionState.mouth_O_2,
+              ]),
+              const SizedBox(height: 16),
+              
+              _buildStateCategory('Mouth E (3)', [
+                CompanionState.mouth_E_1,
+                CompanionState.mouth_E_2,
+                CompanionState.mouth_E_3,
+              ]),
+              const SizedBox(height: 16),
+              
+              _buildStateCategory('Smiles (3)', [
+                CompanionState.smile_soft,
+                CompanionState.smile_big,
+                CompanionState.smile_confident,
+              ]),
+              const SizedBox(height: 16),
+              
+              _buildStateCategory('Eyes Closed (3)', [
+                CompanionState.eyes_closed_1,
+                CompanionState.eyes_closed_2,
+                CompanionState.eyes_closed_soft,
+              ]),
+              const SizedBox(height: 16),
+              
+              _buildStateCategory('Serious (2)', [
+                CompanionState.serious_1,
+                CompanionState.serious_2,
+              ]),
             ],
           ),
         ),
@@ -111,17 +138,35 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
     );
   }
 
-  Widget _buildExpressionCard(ExpressionState state) {
+  Widget _buildStateCategory(String title, List<CompanionState> states) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignTokens.heading2),
+        const SizedBox(height: 12),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: states.length > 2 ? 3 : 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          children: states.map((state) => _buildStateCard(state)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStateCard(CompanionState state) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedExpression = state;
+          _selectedState = state;
         });
       },
       child: Container(
         decoration: BoxDecoration(
           color: DesignTokens.backgroundSecondary,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: DesignTokens.borderDefault,
             width: 1,
@@ -130,71 +175,25 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Show the companion temporarily with this expression
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: Consumer<CompanionController>(
-                builder: (context, controller, child) {
-                  // Temporarily override to show this expression
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      controller.setExpressionOverride(
-                        state,
-                        duration: const Duration(milliseconds: 100),
-                      );
-                    }
-                  });
-                  return const CompanionView(size: 80);
-                },
+            Expanded(
+              child: CompanionAvatar(
+                state: state,
+                size: 60,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              ExpressionAssets.getLabel(state),
-              style: DesignTokens.heading3.copyWith(fontSize: 14),
-              textAlign: TextAlign.center,
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                state.toString().split('.').last,
+                style: DesignTokens.labelSmall,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildBehaviorButton(BehaviorState behavior) {
-    return Consumer<CompanionController>(
-      builder: (context, controller, child) {
-        return ElevatedButton(
-          onPressed: () {
-            controller.setBehaviorState(behavior);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Triggered: ${BehaviorToExpression.getLabel(behavior)}'),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: DesignTokens.backgroundSecondary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: DesignTokens.borderDefault),
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.play_arrow, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                BehaviorToExpression.getLabel(behavior),
-                style: DesignTokens.bodyMedium,
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -208,20 +207,18 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Consumer<CompanionController>(
-                    builder: (context, controller, child) {
-                      controller.setExpressionOverride(_selectedExpression!);
-                      return const CompanionView(size: 200);
-                    },
+                  CompanionAvatar(
+                    state: _selectedState!,
+                    size: 300,
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    ExpressionAssets.getLabel(_selectedExpression!),
+                    _selectedState.toString().split('.').last,
                     style: DesignTokens.displayLarge,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Asset: ${ExpressionAssets.getAssetPath(_selectedExpression!)}',
+                    'Asset: ${companionFrames[_selectedState!]}',
                     style: DesignTokens.bodyMedium.copyWith(
                       color: DesignTokens.textTertiary,
                     ),
@@ -241,7 +238,7 @@ class _CompanionDebugScreenState extends State<CompanionDebugScreen> {
                 ),
                 onPressed: () {
                   setState(() {
-                    _selectedExpression = null;
+                    _selectedState = null;
                   });
                 },
               ),

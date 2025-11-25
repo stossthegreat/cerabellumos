@@ -16,7 +16,8 @@ import '../models/coaching_message.dart';
 import '../services/api_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/companion_debug_screen.dart';
-import '../companion/companion_view.dart';
+import '../companion/companion_avatar.dart';
+import '../companion/companion_state.dart';
 import '../companion/companion_controller.dart';
 import '../services/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -322,17 +323,6 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildCompanion(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final controller = context.read<CompanionController>();
-    
-    // Update companion state based on app data
-    controller.updateFromAppState(
-      todayMinutes: appState.userData['todayMinutes'] as int,
-      streak: appState.userData['streak'] as int,
-      exams: appState.exams,
-      hour: DateTime.now().hour,
-    );
-    
     return GestureDetector(
       onLongPress: () {
         // Long press to open debug screen
@@ -345,11 +335,18 @@ class _HomeTabState extends State<HomeTab> {
       },
       child: GlassmorphicCard(
         padding: const EdgeInsets.all(DesignTokens.space24),
-        child: const Column(
+        child: Column(
           children: [
-            CompanionView(size: 140),
-            SizedBox(height: DesignTokens.space16),
-            Text(
+            Consumer<CompanionController>(
+              builder: (context, controller, child) {
+                return CompanionAvatar(
+                  state: controller.currentState,
+                  size: 140,
+                );
+              },
+            ),
+            const SizedBox(height: DesignTokens.space16),
+            const Text(
               'Long-press for debug',
               style: TextStyle(
                 fontSize: 12,

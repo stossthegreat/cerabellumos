@@ -41,13 +41,16 @@ class AudioService {
       await tempFile.writeAsBytes(bytes);
 
       // Start companion talking animation
-      companion.triggerTalk(text);
+      companion.startTalking();
 
       // Play audio
       await _player.play(DeviceFileSource(tempFile.path));
 
       // Wait for playback to complete
       await _player.onPlayerComplete.first;
+
+      // Stop talking animation
+      companion.stopTalking();
 
       // Clean up temp file
       try {
@@ -62,7 +65,9 @@ class AudioService {
       _isPlaying = false;
       print('❌ Error playing voice message: $e');
       // Still trigger talk animation even if audio fails (visual feedback)
-      companion.triggerTalk(text);
+      companion.startTalking();
+      await Future.delayed(Duration(milliseconds: text.length * 50));
+      companion.stopTalking();
     }
   }
 

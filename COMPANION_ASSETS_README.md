@@ -1,60 +1,176 @@
-# Companion Asset Requirements
+# Companion System - 18-State Avatar
 
-## 📁 Where to Place Your PNG Files
+## ✅ SYSTEM STATUS: FULLY LOADED
 
-Put your 6 PNG character images in:
+All 18 companion images are in place and ready!
 
+---
+
+## 📁 Image Locations
+
+All images stored in:
 ```
 /home/felix/cerabellumos/assets/companion/
 ```
 
-## 📋 Required Files (EXACT Names)
+---
 
-You MUST provide these 6 PNG files with **EXACT** file names:
+## 🎨 The 18 States (ALL LOADED ✅)
 
-1. `neutral.png` - Default calm state
-2. `smile.png` - Happy/positive
-3. `closed_eyes.png` - Sleeping/resting
-4. `talking_open.png` - Speaking/coaching
-5. `worried.png` - Concerned/drift
-6. `alert.png` - Urgent/exam stress
+### **1. Default**
+- `neutral_default.png` ✅
 
-## ✅ File Requirements
+### **2. Mouth A (4 variations)**
+- `mouth_A_1.png` ✅
+- `mouth_A_2.png` ✅
+- `mouth_A_3.png` ✅
+- `mouth_A_4.png` ✅
 
-**Format:** PNG with transparency  
-**Size:** Any size (400x400 or larger recommended)  
-**Background:** Transparent recommended  
-**Position:** Character should be centered in the image  
+### **3. Mouth O (2 variations)**
+- `mouth_O_1.png` ✅
+- `mouth_O_2.png` ✅
 
-## 🎨 Character Design Guidelines
+### **4. Mouth E (3 variations)**
+- `mouth_E_1.png` ✅
+- `mouth_E_2.png` ✅
+- `mouth_E_3.png` ✅
 
-- Age: 20s-30s  
-- Style: Semi-realistic, professional  
-- Vibe: Calm, sharp, study mentor  
-- NOT: Childish, cartoonish, chibi  
+### **5. Smiles (3 variations)**
+- `smile_soft.png` ✅
+- `smile_big.png` ✅
+- `smile_confident.png` ✅
 
-Each expression should be clearly different but the same character.
+### **6. Eyes Closed (3 variations)**
+- `eyes_closed_1.png` ✅
+- `eyes_closed_2.png` ✅
+- `eyes_closed_soft.png` ✅
 
-## ⚠️ What Happens if Files are Missing?
+### **7. Serious (2 variations)**
+- `serious_1.png` ✅
+- `serious_2.png` ✅
 
-If a PNG file is missing, the system will:
-1. Log an error to the console: `⚠️ Missing companion asset: assets/companion/[filename].png`
-2. Try to fallback to `neutral.png`
-3. If even `neutral.png` is missing, show a red error icon
+**Total:** 18 states, 18 PNG files, ALL PRESENT ✅
 
-## 🧪 Testing Your Images
+---
 
-1. Place all 6 PNG files in `assets/companion/`
-2. Run: `flutter pub get` (to refresh assets)
-3. Run the app
-4. Long-press the companion on the home screen
-5. See all 6 expressions in the debug screen
+## 🎬 Built-in Animations
 
-## 🔧 Current State
+### **1. Blinking (Automatic)**
+- Triggers randomly every 4-7 seconds
+- Sequence: `neutral → eyes_closed_1 → eyes_closed_2 → eyes_closed_soft → back to previous state`
+- Duration: ~320ms total
+- Pauses during talking
 
-The system is READY and waiting for your PNG files.  
-**NO PLACEHOLDERS** will be generated.  
-**NO GUESSING** - only your provided assets will be used.
+### **2. Talking (Manual trigger)**
+- Cycles through mouth shapes
+- Sequence: `A → E → O → A → E → O...` (random variations)
+- Speed: 120ms per frame
+- Syncs with audio playback
+- Call: `controller.startTalking()` / `controller.stopTalking()`
 
-Once you add the 6 PNG files, the companion will come alive! 🔥
+---
 
+## 🎮 Controller API
+
+```dart
+final controller = context.read<CompanionController>();
+
+// Set specific emotion/state
+controller.setEmotion(CompanionState.smile_big);
+
+// Start talking animation (for voice playback)
+controller.startTalking();
+
+// Stop talking
+controller.stopTalking();
+
+// Check if talking
+bool isTalking = controller.isTalking;
+
+// Get current state
+CompanionState current = controller.currentState;
+```
+
+---
+
+## 🖼️ Widget Usage
+
+```dart
+// Simple display
+CompanionAvatar(
+  state: CompanionState.neutral_default,
+  size: 200,
+)
+
+// With controller (reactive)
+Consumer<CompanionController>(
+  builder: (context, controller, child) {
+    return CompanionAvatar(
+      state: controller.currentState,
+      size: 140,
+    );
+  },
+)
+```
+
+---
+
+## 🧪 Testing
+
+1. **Run the app**
+2. **Go to home tab** - see companion with auto-blinking
+3. **Long-press companion** → Opens debug screen
+4. **Tap volume icon** → Test talking animation
+5. **Tap any state** → Preview full screen
+
+---
+
+## 🎤 Voice Integration
+
+When voice messages play:
+1. Backend sends `audioBase64` + `text`
+2. Frontend calls `AudioService().playVoiceMessage()`
+3. Companion automatically starts talking animation
+4. Mouth cycles through A/E/O shapes
+5. Animation stops when audio completes
+
+**Synced perfectly with Eleven Labs TTS!** 🔥
+
+---
+
+## 📊 Image Mapping
+
+| Enum State | File Path |
+|------------|-----------|
+| `neutral_default` | `assets/companion/neutral_default.png` |
+| `mouth_A_1` | `assets/companion/mouth_A_1.png` |
+| `mouth_A_2` | `assets/companion/mouth_A_2.png` |
+| `mouth_A_3` | `assets/companion/mouth_A_3.png` |
+| `mouth_A_4` | `assets/companion/mouth_A_4.png` |
+| `mouth_O_1` | `assets/companion/mouth_O_1.png` |
+| `mouth_O_2` | `assets/companion/mouth_O_2.png` |
+| `mouth_E_1` | `assets/companion/mouth_E_1.png` |
+| `mouth_E_2` | `assets/companion/mouth_E_2.png` |
+| `mouth_E_3` | `assets/companion/mouth_E_3.png` |
+| `smile_soft` | `assets/companion/smile_soft.png` |
+| `smile_big` | `assets/companion/smile_big.png` |
+| `smile_confident` | `assets/companion/smile_confident.png` |
+| `eyes_closed_1` | `assets/companion/eyes_closed_1.png` |
+| `eyes_closed_2` | `assets/companion/eyes_closed_2.png` |
+| `eyes_closed_soft` | `assets/companion/eyes_closed_soft.png` |
+| `serious_1` | `assets/companion/serious_1.png` |
+| `serious_2` | `assets/companion/serious_2.png` |
+
+---
+
+## 🔥 RESULT:
+
+✅ **18-state companion system**  
+✅ **Automatic blinking animation**  
+✅ **Talking mouth animation**  
+✅ **Voice-synced playback**  
+✅ **All images loaded from assets/companion/**  
+✅ **NO placeholders, NO guessing**  
+✅ **Clean enum + frame map**  
+
+**COMPANION IS ALIVE WITH 18 EXPRESSIONS!** 🎯🔥
