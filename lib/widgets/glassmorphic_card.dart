@@ -28,8 +28,8 @@ class GlassmorphicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderRadius = borderRadius ?? DesignTokens.radiusMedium;
-    final effectiveBackgroundColor = backgroundColor ?? DesignTokens.surfaceDefault;
+    final effectiveBorderRadius = borderRadius ?? DesignTokens.radiusLarge;
+    final effectiveBackgroundColor = backgroundColor ?? DesignTokens.surfaceDefault.withOpacity(0.9);
     final effectiveBorderColor = borderColor ?? DesignTokens.borderDefault;
 
     final card = ClipRRect(
@@ -43,9 +43,29 @@ class GlassmorphicCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(effectiveBorderRadius),
             border: Border.all(
               color: effectiveBorderColor,
-              width: 1,
+              width: 1.5,
             ),
-            boxShadow: elevated ? DesignTokens.shadowSmall : null,
+            boxShadow: elevated 
+                ? [
+                    BoxShadow(
+                      color: DesignTokens.energyOrange.withOpacity(0.1),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: child,
         ),

@@ -1,51 +1,57 @@
 import 'package:flutter/material.dart';
 
 /// Cerebellum OS Design System
-/// Professional, data-driven, weaponized intelligence
+/// Fitness OS Inspired - Vibrant, energetic, motivational
 class DesignTokens {
   // ============================================================================
-  // COLORS
+  // COLORS - FITNESS OS INSPIRED
   // ============================================================================
   
-  /// Primary accent color - Electric Blue
-  static const Color primary = Color(0xFF0EA5E9);
-  static const Color primaryDark = Color(0xFF0284C7);
-  static const Color primaryLight = Color(0xFF38BDF8);
+  /// Primary accent colors - Vibrant Orange & Electric Blue
+  static const Color primary = Color(0xFFFF6B35);        // Vibrant Orange
+  static const Color primaryDark = Color(0xFFE55A2B);    // Darker Orange
+  static const Color primaryLight = Color(0xFFFF8A65);   // Light Orange
   
-  /// Backgrounds - Deep blacks and charcoals
-  static const Color backgroundPrimary = Color(0xFF0A0A0A);
-  static const Color backgroundSecondary = Color(0xFF1A1A1A);
-  static const Color backgroundTertiary = Color(0xFF242424);
+  /// Secondary accent - Electric Blue
+  static const Color secondary = Color(0xFF00D4FF);      // Electric Blue
+  static const Color secondaryDark = Color(0xFF00B8E6);  // Darker Blue
+  static const Color secondaryLight = Color(0xFF4DE2FF); // Light Blue
   
-  /// Surface colors
-  static const Color surfaceDefault = Color(0xFF1A1A1A);
-  static const Color surfaceElevated = Color(0xFF242424);
-  static const Color surfaceHover = Color(0xFF2E2E2E);
+  /// Backgrounds - Modern dark with subtle warmth
+  static const Color backgroundPrimary = Color(0xFF0F0F0F);   // Deep Black
+  static const Color backgroundSecondary = Color(0xFF1A1A1A); // Dark Gray
+  static const Color backgroundTertiary = Color(0xFF2A2A2A);  // Medium Gray
   
-  /// Text colors
+  /// Surface colors with fitness energy
+  static const Color surfaceDefault = Color(0xFF1E1E1E);
+  static const Color surfaceElevated = Color(0xFF2D2D2D);
+  static const Color surfaceHover = Color(0xFF3A3A3A);
+  
+  /// Text colors - High contrast for readability
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFA1A1AA);
-  static const Color textTertiary = Color(0xFF71717A);
-  static const Color textDisabled = Color(0xFF52525B);
+  static const Color textSecondary = Color(0xFFB8B8B8);
+  static const Color textTertiary = Color(0xFF888888);
+  static const Color textDisabled = Color(0xFF555555);
   
-  /// Border colors
-  static const Color borderDefault = Color(0xFF3F3F46);
-  static const Color borderSubtle = Color(0xFF27272A);
-  static const Color borderStrong = Color(0xFF52525B);
+  /// Border colors with subtle energy
+  static const Color borderDefault = Color(0xFF404040);
+  static const Color borderSubtle = Color(0xFF2A2A2A);
+  static const Color borderStrong = Color(0xFF606060);
+  static const Color borderAccent = Color(0xFFFF6B35);  // Orange border for highlights
   
-  /// Semantic colors - Professional, not dramatic
-  static const Color success = Color(0xFF10B981);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF3B82F6);
+  /// Semantic colors - Fitness motivated
+  static const Color success = Color(0xFF00E676);        // Bright Green
+  static const Color warning = Color(0xFFFFAB00);        // Amber
+  static const Color error = Color(0xFFFF5252);          // Bright Red
+  static const Color info = Color(0xFF00D4FF);           // Electric Blue
   
-  /// Data visualization colors
-  static const Color dataBlue = Color(0xFF0EA5E9);
-  static const Color dataGreen = Color(0xFF10B981);
-  static const Color dataYellow = Color(0xFFF59E0B);
-  static const Color dataRed = Color(0xFFEF4444);
-  static const Color dataPurple = Color(0xFF8B5CF6);
-  static const Color dataTeal = Color(0xFF14B8A6);
+  /// Fitness-specific colors
+  static const Color energyOrange = Color(0xFFFF6B35);   // Main energy color
+  static const Color powerBlue = Color(0xFF00D4FF);      // Power/focus color
+  static const Color successGreen = Color(0xFF00E676);   // Achievement color
+  static const Color warningAmber = Color(0xFFFFAB00);   // Caution color
+  static const Color motivationPurple = Color(0xFF9C27B0); // Motivation color
+  static const Color focusTeal = Color(0xFF00BCD4);      // Focus/calm color
   
   // ============================================================================
   // TYPOGRAPHY

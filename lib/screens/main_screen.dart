@@ -5,6 +5,7 @@ import '../tabs/home_tab.dart';
 import '../tabs/study_tab.dart';
 import '../tabs/canvas_tab.dart';
 import '../tabs/teacher_tab.dart';
+import '../core/design_tokens.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -38,13 +39,13 @@ class MainScreen extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black,
-            const Color(0xFF1F2937).withOpacity(0.9),
-            const Color(0xFF111827).withOpacity(0.95),
+            DesignTokens.backgroundPrimary,
+            DesignTokens.backgroundSecondary.withOpacity(0.95),
+            DesignTokens.backgroundTertiary.withOpacity(0.98),
           ],
         ),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.1)),
+          top: BorderSide(color: DesignTokens.borderAccent.withOpacity(0.3)),
         ),
       ),
       child: SafeArea(
@@ -101,10 +102,12 @@ class MainScreen extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           gradient: isActive
-              ? const LinearGradient(
-                  colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+              ? LinearGradient(
+                  colors: [DesignTokens.energyOrange, DesignTokens.powerBlue],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 )
               : null,
         ),
@@ -114,46 +117,49 @@ class MainScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 gradient: isActive
                     ? LinearGradient(
                         colors: [
-                          const Color(0xFFDC2626).withOpacity(0.5),
-                          const Color(0xFFEC4899).withOpacity(0.5),
+                          DesignTokens.energyOrange.withOpacity(0.3),
+                          DesignTokens.powerBlue.withOpacity(0.3),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       )
                     : null,
               ),
               child: Icon(
                 icon,
-                size: 20,
-                color: isActive ? const Color(0xFFFCA5A5) : const Color(0xFF9CA3AF),
+                size: 22,
+                color: isActive ? Colors.white : DesignTokens.textTertiary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
-                color: isActive ? const Color(0xFFFCA5A5) : const Color(0xFF6B7280),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: isActive ? Colors.white : DesignTokens.textTertiary,
               ),
             ),
             if (isActive)
               Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 32,
-                height: 4,
+                margin: const EdgeInsets.only(top: 6),
+                width: 40,
+                height: 3,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(2),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+                  gradient: LinearGradient(
+                    colors: [DesignTokens.energyOrange, DesignTokens.powerBlue],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFDC2626).withOpacity(0.8),
-                      blurRadius: 8,
+                      color: DesignTokens.energyOrange.withOpacity(0.6),
+                      blurRadius: 12,
+                      spreadRadius: 2,
                     ),
                   ],
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'glassmorphic_card.dart';
+import '../core/design_tokens.dart';
 
 class MissionCard extends StatelessWidget {
   final String time;
@@ -25,11 +26,11 @@ class MissionCard extends StatelessWidget {
   Color _getPriorityColor() {
     switch (priority) {
       case 'CRITICAL':
-        return const Color(0xFFDC2626);
+        return DesignTokens.error;
       case 'ELITE':
-        return const Color(0xFF8B5CF6);
+        return DesignTokens.motivationPurple;
       default:
-        return const Color(0xFF3B82F6);
+        return DesignTokens.powerBlue;
     }
   }
 
@@ -38,17 +39,11 @@ class MissionCard extends StatelessWidget {
     return GlassmorphicCard(
       padding: const EdgeInsets.all(20),
       borderColor: done
-          ? const Color(0xFF10B981).withOpacity(0.3)
-          : const Color(0xFF8B5CF6).withOpacity(0.5),
-      gradientColors: done
-          ? [
-              const Color(0xFF10B981).withOpacity(0.2),
-              const Color(0xFF10B981).withOpacity(0.05),
-            ]
-          : [
-              const Color(0xFF8B5CF6).withOpacity(0.2),
-              const Color(0xFF8B5CF6).withOpacity(0.05),
-            ],
+          ? DesignTokens.successGreen.withOpacity(0.4)
+          : DesignTokens.energyOrange.withOpacity(0.6),
+      backgroundColor: done
+          ? DesignTokens.successGreen.withOpacity(0.1)
+          : DesignTokens.energyOrange.withOpacity(0.08),
       onTap: onTap,
       child: Row(
         children: [
@@ -60,15 +55,15 @@ class MissionCard extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(
                 color: done
-                    ? const Color(0xFF10B981)
-                    : const Color(0xFF8B5CF6),
+                    ? DesignTokens.successGreen
+                    : DesignTokens.energyOrange,
                 width: 2,
               ),
-              color: done ? const Color(0xFF10B981) : Colors.transparent,
+              color: done ? DesignTokens.successGreen : Colors.transparent,
               boxShadow: done
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.6),
+                        color: DesignTokens.successGreen.withOpacity(0.6),
                         blurRadius: 12,
                       ),
                     ]
@@ -96,7 +91,7 @@ class MissionCard extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 15,
-                          color: done ? Colors.grey.shade500 : Colors.white,
+                          color: done ? DesignTokens.textTertiary : DesignTokens.textPrimary,
                           decoration:
                               done ? TextDecoration.lineThrough : null,
                         ),
@@ -128,7 +123,7 @@ class MissionCard extends StatelessWidget {
                   '$time • $duration',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade500,
+                    color: DesignTokens.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -140,9 +135,9 @@ class MissionCard extends StatelessWidget {
             const SizedBox(width: 16),
             Text(
               '$efficiency% EFF',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: Color(0xFF10B981),
+                color: DesignTokens.successGreen,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -150,7 +145,7 @@ class MissionCard extends StatelessWidget {
           const SizedBox(width: 8),
           Icon(
             LucideIcons.chevronRight,
-            color: Colors.grey.shade600,
+            color: DesignTokens.textTertiary,
             size: 20,
           ),
         ],

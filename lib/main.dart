@@ -8,6 +8,7 @@ import 'providers/app_state.dart';
 import 'providers/study_targets_provider.dart';
 import 'providers/projects_provider.dart';
 import 'companion/companion_controller.dart';
+import 'core/design_tokens.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +19,10 @@ void main() async {
   ]);
   
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.black,
+      systemNavigationBarColor: DesignTokens.backgroundPrimary,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -46,9 +47,26 @@ class CerebellumOS extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.dark,
-          scaffoldBackgroundColor: Colors.black,
+          scaffoldBackgroundColor: DesignTokens.backgroundPrimary,
+          primaryColor: DesignTokens.primary,
+          colorScheme: ColorScheme.dark(
+            primary: DesignTokens.primary,
+            secondary: DesignTokens.secondary,
+            surface: DesignTokens.surfaceDefault,
+            background: DesignTokens.backgroundPrimary,
+            error: DesignTokens.error,
+          ),
           textTheme: GoogleFonts.interTextTheme(
-            ThemeData.dark().textTheme,
+            ThemeData.dark().textTheme.copyWith(
+              displayLarge: DesignTokens.displayLarge,
+              displayMedium: DesignTokens.displayMedium,
+              headlineLarge: DesignTokens.heading1,
+              headlineMedium: DesignTokens.heading2,
+              headlineSmall: DesignTokens.heading3,
+              bodyLarge: DesignTokens.bodyLarge,
+              bodyMedium: DesignTokens.bodyMedium,
+              bodySmall: DesignTokens.bodySmall,
+            ),
           ),
           useMaterial3: true,
         ),
@@ -68,9 +86,10 @@ class AppInitializer extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
+            backgroundColor: DesignTokens.backgroundPrimary,
             body: Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                valueColor: AlwaysStoppedAnimation<Color>(DesignTokens.primary),
               ),
             ),
           );

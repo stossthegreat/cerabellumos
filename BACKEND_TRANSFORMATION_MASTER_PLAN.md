@@ -12,7 +12,8 @@ Transform Future-You OS backend → World's most powerful AI Study OS
 ### What We KEEP (The Power):
 
 ✅ **3-Phase AI Engine** (Observer → Architect → Oracle)  
-✅ **Memory Intelligence Service** (pattern extraction, consciousness building)  
+✅ **Memory Intelligence Service** (pattern extraction, consciousness building)  lving u got shit memory
+
 ✅ **Semantic Memory** (Chroma embeddings, similarity search)  
 ✅ **Short-term Memory** (dialogue tracking)  
 ✅ **Redis + BullMQ Scheduler** (automatic firing)  
