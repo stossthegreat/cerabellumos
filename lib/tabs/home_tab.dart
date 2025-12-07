@@ -17,6 +17,7 @@ import '../services/api_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/companion_debug_screen.dart';
 import '../companion/companion_avatar.dart';
+import '../companion/lottie_companion_widget.dart';
 import '../companion/companion_state.dart';
 import '../companion/companion_controller.dart';
 import '../companion/companion_emotion_engine.dart';
@@ -387,9 +388,11 @@ class _HomeTabState extends State<HomeTab> {
         padding: const EdgeInsets.all(DesignTokens.space24),
         child: Column(
           children: [
-            CompanionAvatar(
+            // Use Lottie mascot instead of PNG avatar
+            LottieCompanionWidget(
               state: controller.currentState,
-              size: 140,
+              isTalking: controller.isTalking,
+              size: 180,
             ),
             const SizedBox(height: DesignTokens.space16),
             Text(

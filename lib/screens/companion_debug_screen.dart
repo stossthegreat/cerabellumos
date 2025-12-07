@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../companion/companion_state.dart';
 import '../companion/companion_avatar.dart';
+import '../companion/lottie_companion_widget.dart';
 import '../companion/companion_controller.dart';
 import '../core/design_tokens.dart';
 
